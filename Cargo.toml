@@ -1,0 +1,25 @@
+[package]
+name = "cargo-bolt"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.56"
+
+description = "Cargo subcommand for optimizing Rust binaries with the LLVM BOLT binary optimizer."
+repository = "https://github.com/kobzol/cargo-bolt"
+authors = ["Jakub Beránek <berykubik@gmail.com>"]
+keywords = ["bolt", "pgo", "cargo", "optimization"]
+categories = ["development-tools::cargo-plugins"]
+
+readme = "README.md"
+license = "MIT"
+include = [
+    "src/*.rs",
+    "Cargo.toml",
+    "README.md"
+]
+
+[dependencies]
+cargo = "0.63.1"
+anyhow = "1.0.58"
+which = "4.2.5"
+clap = { version = "3.2.8", features = ["derive"] }
