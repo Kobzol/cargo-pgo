@@ -1,14 +1,8 @@
-use crate::env::pgo::find_pgo_env;
+use super::llvm_profdata_install_hint;
+use crate::cli::cli_format_path;
+use crate::pgo::env::find_pgo_env;
 use anyhow::anyhow;
 use colored::Colorize;
-
-fn llvm_profdata_install_hint() -> String {
-    format!(
-        "Try installing `llvm-profdata` using `{}` or build LLVM manually and \
-add its `bin` directory to PATH.",
-        "rustup component add llvm-tools-preview".blue()
-    )
-}
 
 /// Check that binaries required for performing PGO can be found.
 pub fn pgo_check() -> anyhow::Result<()> {
@@ -18,7 +12,7 @@ pub fn pgo_check() -> anyhow::Result<()> {
                 "{}: {} at {}",
                 "[llvm-profdata]".bold(),
                 "found".green(),
-                env.llvm_profdata.display()
+                cli_format_path(&env.llvm_profdata.display())
             );
             Ok(())
         }

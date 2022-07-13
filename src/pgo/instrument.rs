@@ -1,8 +1,9 @@
+use crate::cli::cli_format_path;
+use crate::pgo::build::build_with_flags;
 use crate::workspace::{get_cargo_workspace, get_pgo_directory};
 use cargo_metadata::Message;
 use colored::Colorize;
 use std::fmt::Write;
-use std::process::Command;
 
 #[derive(clap::Parser, Debug)]
 #[clap(trailing_var_arg(true))]
@@ -21,21 +22,8 @@ pub fn pgo_instrument(args: PgoInstrumentArgs) -> anyhow::Result<()> {
 
     log::info!("PGO profiles will be stored into {}", pgo_dir.display());
 
-    // TODO: also filter message-format
-    let trailing_args = args.cargo_args.into_iter().filter(|arg| arg != "--release");
-
-    let mut command = Command::new("cargo");
-    command.args(&[
-        "build",
-        "--release",
-        "--message-format",
-        "json-diagnostic-rendered-ansi",
-    ]);
-    for arg in trailing_args {
-        command.arg(arg);
-    }
-    command.env("RUSTFLAGS", flags);
-    let output = command.output()?;
+    let flags = format!("-Cprofile-generate={}", pgo_dir.display());
+    let output = build_with_flags(flags, args.cargo_args)?;
 
     for message in Message::parse_stream(output.stdout.as_slice()) {
         let message = message?;
@@ -45,15 +33,18 @@ pub fn pgo_instrument(args: PgoInstrumentArgs) -> anyhow::Result<()> {
                     log::info!(
                         "PGO-instrumented binary {} built successfully. Now run {} on your workload.",
                         artifact.target.name.blue(),
-                        executable.to_string().blue()
+                        cli_format_path(&executable)
                     );
                 }
             }
             Message::BuildFinished(res) => {
                 if res.success {
-                    println!("{}", "PGO build successfully finished".green());
+                    println!(
+                        "{}",
+                        "PGO instrumentation build successfully finished".green()
+                    );
                 } else {
-                    println!("{}", "PGO build has failed".red());
+                    println!("{}", "PGO instrumentation build has failed".red());
                 }
             }
             Message::TextLine(line) => println!("{}", line),

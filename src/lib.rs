@@ -1,6 +1,6 @@
-pub mod env;
+pub(crate) mod cli;
 pub mod pgo;
-pub mod workspace;
+pub(crate) mod workspace;
 
 use std::path::{Path, PathBuf};
 use std::process::Command;

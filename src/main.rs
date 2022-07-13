@@ -1,5 +1,6 @@
 use cargo_fdo::pgo::check::pgo_check;
 use cargo_fdo::pgo::instrument::{pgo_instrument, PgoInstrumentArgs};
+use cargo_fdo::pgo::optimize::{pgo_optimize, PgoOptimizeArgs};
 use clap::Parser;
 use env_logger::Env;
 
@@ -24,6 +25,8 @@ enum PgoCommand {
     Check,
     /// Run `cargo build` with instrumentation to prepare for PGO.
     Instrument(PgoInstrumentArgs),
+    /// Build an optimized version of a binary using generated PGO profiles.
+    Optimize(PgoOptimizeArgs),
 }
 
 fn run() -> anyhow::Result<()> {
@@ -34,6 +37,7 @@ fn run() -> anyhow::Result<()> {
         Subcommand::Pgo(command) => match command {
             PgoCommand::Check => pgo_check(),
             PgoCommand::Instrument(args) => pgo_instrument(args),
+            PgoCommand::Optimize(args) => pgo_optimize(args),
         },
     }
 }
@@ -42,7 +46,7 @@ fn main() {
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
 
     if let Err(error) = run() {
-        eprintln!("{:?}", error);
+        eprintln!("{}", format!("{:?}", error).trim_end_matches('\n'));
         std::process::exit(1);
     }
 }
