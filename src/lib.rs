@@ -51,3 +51,9 @@ fn get_default_target() -> anyhow::Result<String> {
         .to_owned();
     Ok(host)
 }
+
+/// Clears all files from the directory, if it exists.
+fn clear_directory(path: &Path) -> std::io::Result<()> {
+    std::fs::remove_dir_all(path)?;
+    std::fs::create_dir_all(path)
+}

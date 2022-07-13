@@ -1,3 +1,4 @@
+use crate::clear_directory;
 use crate::cli::cli_format_path;
 use crate::pgo::build::build_with_flags;
 use crate::workspace::{get_cargo_workspace, get_pgo_directory};
@@ -17,6 +18,11 @@ pub fn pgo_instrument(args: PgoInstrumentArgs) -> anyhow::Result<()> {
     let workspace = get_cargo_workspace(&config)?;
     let pgo_dir = get_pgo_directory(&workspace)?;
 
+    if pgo_dir.exists() {
+        log::info!("Profile directory already exists, it will be cleared");
+        clear_directory(&pgo_dir)?;
+    }
+
     let mut flags = std::env::var("RUSTFLAGS").unwrap_or_default();
     write!(&mut flags, " -Cprofile-generate={}", pgo_dir.display()).unwrap();
 
@@ -31,7 +37,7 @@ pub fn pgo_instrument(args: PgoInstrumentArgs) -> anyhow::Result<()> {
             Message::CompilerArtifact(artifact) => {
                 if let Some(executable) = artifact.executable {
                     log::info!(
-                        "PGO-instrumented binary {} built successfully. Now run {} on your workload.",
+                        "PGO-instrumented binary {} built successfully. Now run {} on your workload",
                         artifact.target.name.blue(),
                         cli_format_path(&executable)
                     );
@@ -39,12 +45,12 @@ pub fn pgo_instrument(args: PgoInstrumentArgs) -> anyhow::Result<()> {
             }
             Message::BuildFinished(res) => {
                 if res.success {
-                    println!(
-                        "{}",
-                        "PGO instrumentation build successfully finished".green()
+                    log::info!(
+                        "PGO instrumentation build finished {}",
+                        "successfully".green()
                     );
                 } else {
-                    println!("{}", "PGO instrumentation build has failed".red());
+                    log::error!("PGO instrumentation build has {}", "failed".red());
                 }
             }
             Message::TextLine(line) => println!("{}", line),
