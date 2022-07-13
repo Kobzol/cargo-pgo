@@ -62,3 +62,43 @@ fn parse_cargo_args(cargo_args: Vec<String>) -> CargoArgs {
     }
     args
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::pgo::build::parse_cargo_args;
+
+    #[test]
+    fn test_parse_cargo_args_filter_release() {
+        let args = parse_cargo_args(vec![
+            "foo".to_string(),
+            "--release".to_string(),
+            "--bar".to_string(),
+        ]);
+        assert_eq!(args.filtered, vec!["foo".to_string(), "--bar".to_string()]);
+    }
+
+    #[test]
+    fn test_parse_cargo_args_filter_message_format() {
+        let args = parse_cargo_args(vec![
+            "foo".to_string(),
+            "--message-format".to_string(),
+            "json".to_string(),
+            "bar".to_string(),
+        ]);
+        assert_eq!(args.filtered, vec!["foo".to_string(), "bar".to_string()]);
+    }
+
+    #[test]
+    fn test_parse_cargo_args_find_target() {
+        let args = parse_cargo_args(vec![
+            "--target".to_string(),
+            "x64".to_string(),
+            "bar".to_string(),
+        ]);
+        assert_eq!(
+            args.filtered,
+            vec!["--target".to_string(), "x64".to_string(), "bar".to_string()]
+        );
+        assert!(args.contains_target);
+    }
+}
