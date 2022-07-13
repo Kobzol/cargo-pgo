@@ -2,6 +2,7 @@ pub(crate) mod cli;
 pub mod pgo;
 pub(crate) mod workspace;
 
+use anyhow::anyhow;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -24,6 +25,7 @@ pub fn find_bolt_env() -> anyhow::Result<BoltEnv> {
     Ok(BoltEnv { bolt, merge_fdata })
 }
 
+/// Runs a command with the provided arguments and returns its stdout.
 fn run_command(program: &str, args: &[&str]) -> anyhow::Result<String> {
     let mut cmd = Command::new(program);
     for arg in args {
@@ -31,4 +33,21 @@ fn run_command(program: &str, args: &[&str]) -> anyhow::Result<String> {
     }
     cmd.stdout(std::process::Stdio::piped());
     Ok(String::from_utf8(cmd.output()?.stdout)?)
+}
+
+/// Tries to find the default target triple used for compiling on the current host computer.
+fn get_default_target() -> anyhow::Result<String> {
+    const HOST_FIELD: &str = "host: ";
+
+    // Query rustc for defaults.
+    let output = run_command("rustc", &["-vV"])?;
+
+    // Parse the default target from stdout.
+    let host = output
+        .lines()
+        .find(|l| l.starts_with(HOST_FIELD))
+        .map(|l| &l[HOST_FIELD.len()..])
+        .ok_or_else(|| anyhow!("Failed to parse target from rustc output."))?
+        .to_owned();
+    Ok(host)
 }
