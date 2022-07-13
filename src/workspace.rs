@@ -12,7 +12,7 @@ fn get_root_manifest() -> anyhow::Result<PathBuf> {
 /// Find the Cargo workspace from the current working directory.
 pub fn get_cargo_workspace(config: &cargo::Config) -> anyhow::Result<Workspace> {
     let manifest = get_root_manifest()?;
-    let workspace = Workspace::new(&manifest, &config)?;
+    let workspace = Workspace::new(&manifest, config)?;
     Ok(workspace)
 }
 
