@@ -36,7 +36,7 @@ fn run_command(program: &str, args: &[&str]) -> anyhow::Result<String> {
 }
 
 /// Tries to find the default target triple used for compiling on the current host computer.
-fn get_default_target() -> anyhow::Result<String> {
+pub fn get_default_target() -> anyhow::Result<String> {
     const HOST_FIELD: &str = "host: ";
 
     // Query rustc for defaults.

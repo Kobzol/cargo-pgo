@@ -166,6 +166,7 @@ dependencies = [
  "env_logger",
  "humansize",
  "log",
+ "tempfile",
  "which",
 ]
 
