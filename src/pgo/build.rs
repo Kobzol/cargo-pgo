@@ -27,7 +27,10 @@ pub fn build_with_flags(flags: String, cargo_args: Vec<String>) -> anyhow::Resul
     // See https://doc.rust-lang.org/rustc/profile-guided-optimization.html#a-complete-cargo-workflow
     if !parsed_args.contains_target {
         let default_target = get_default_target().map_err(|error| {
-            anyhow::anyhow!("Unable to find default target triple for your platform: {error:?}")
+            anyhow::anyhow!(
+                "Unable to find default target triple for your platform: {:?}",
+                error
+            )
         })?;
         command.args(&["--target", &default_target]);
     }

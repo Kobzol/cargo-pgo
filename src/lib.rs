@@ -18,9 +18,9 @@ pub struct BoltEnv {
 
 pub fn find_bolt_env() -> anyhow::Result<BoltEnv> {
     let bolt = resolve_binary(Path::new("llvm-bolt"))
-        .map_err(|error| anyhow::anyhow!("Cannot find llvm-bolt: {error:?}"))?;
+        .map_err(|error| anyhow::anyhow!("Cannot find llvm-bolt: {:?}", error))?;
     let merge_fdata = resolve_binary(Path::new("merge-fdata"))
-        .map_err(|error| anyhow::anyhow!("Cannot find merge-fdata: {error:?}"))?;
+        .map_err(|error| anyhow::anyhow!("Cannot find merge-fdata: {:?}", error))?;
 
     Ok(BoltEnv { bolt, merge_fdata })
 }

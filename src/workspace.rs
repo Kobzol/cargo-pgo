@@ -5,7 +5,7 @@ use std::path::PathBuf;
 /// Finds the root `Cargo.toml` file.
 fn get_root_manifest() -> anyhow::Result<PathBuf> {
     let manifest = find_root_manifest_for_wd(&std::env::current_dir()?)
-        .map_err(|error| anyhow::anyhow!("Cannot find root `Cargo.toml`: {error:?}"))?;
+        .map_err(|error| anyhow::anyhow!("Cannot find root `Cargo.toml`: {:?}", error))?;
     Ok(manifest)
 }
 

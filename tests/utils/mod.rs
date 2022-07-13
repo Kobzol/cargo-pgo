@@ -64,12 +64,20 @@ pub trait OutputExt {
 
 impl OutputExt for Output {
     fn assert_ok(self) -> Self {
-        assert!(self.status.success());
+        if !self.status.success() {
+            eprintln!("{}", self.stdout());
+            eprintln!("{}", self.stderr());
+            panic!("Output was not successful");
+        }
         self
     }
 
     fn assert_error(self) -> Self {
-        assert!(!self.status.success());
+        if self.status.success() {
+            eprintln!("{}", self.stdout());
+            eprintln!("{}", self.stderr());
+            panic!("Output was successful");
+        }
         self
     }
 

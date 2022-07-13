@@ -2,7 +2,7 @@
 name = "cargo-fdo"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.56"
+rust-version = "1.56.1"
 
 description = "Cargo subcommand for optimizing Rust binaries with PGO and BOLT."
 repository = "https://github.com/kobzol/cargo-bolt"
@@ -26,7 +26,7 @@ include = [
 ]
 
 [dependencies]
-cargo = "0.63.1"
+cargo = "0.60.0"
 anyhow = "1"
 which = "4.2"
 clap = { version = "3.2", features = ["derive"] }
