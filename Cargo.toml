@@ -1,13 +1,20 @@
 [package]
-name = "cargo-bolt"
+name = "cargo-fdo"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.56"
 
-description = "Cargo subcommand for optimizing Rust binaries with the LLVM BOLT binary optimizer."
+description = "Cargo subcommand for optimizing Rust binaries with PGO and BOLT."
 repository = "https://github.com/kobzol/cargo-bolt"
 authors = ["Jakub Beránek <berykubik@gmail.com>"]
-keywords = ["bolt", "pgo", "cargo", "optimization"]
+keywords = [
+    "pgo",
+    "bolt",
+    "cargo",
+    "optimization",
+    "feedback-directed-optimization",
+    "profile-guided-optimization"
+]
 categories = ["development-tools::cargo-plugins"]
 
 readme = "README.md"
@@ -20,6 +27,9 @@ include = [
 
 [dependencies]
 cargo = "0.63.1"
-anyhow = "1.0.58"
-which = "4.2.5"
-clap = { version = "3.2.8", features = ["derive"] }
+anyhow = "1"
+which = "4.2"
+clap = { version = "3.2", features = ["derive"] }
+log = "0.4"
+env_logger = "0.9.0"
+colored = "2.0.0"
