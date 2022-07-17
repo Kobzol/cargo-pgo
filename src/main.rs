@@ -15,13 +15,6 @@ enum Args {
 #[derive(clap::Parser, Debug)]
 enum Subcommand {
     /// Perform PGO (profile-guided optimization) tasks.
-    #[clap(subcommand)]
-    Pgo(PgoCommand),
-}
-
-#[derive(clap::Parser, Debug)]
-enum PgoCommand {
-    /// Check that your environment is prepared for PGO.
     Check,
     /// Run `cargo build` with instrumentation to prepare for PGO.
     Instrument(PgoInstrumentArgs),
@@ -34,11 +27,9 @@ fn run() -> anyhow::Result<()> {
 
     let Args::Fdo(args) = args;
     match args {
-        Subcommand::Pgo(command) => match command {
-            PgoCommand::Check => pgo_check(),
-            PgoCommand::Instrument(args) => pgo_instrument(args),
-            PgoCommand::Optimize(args) => pgo_optimize(args),
-        },
+        Subcommand::Check => pgo_check(),
+        Subcommand::Instrument(args) => pgo_instrument(args),
+        Subcommand::Optimize(args) => pgo_optimize(args),
     }
 }
 

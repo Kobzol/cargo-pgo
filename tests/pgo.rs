@@ -7,7 +7,7 @@ use crate::utils::OutputExt;
 #[test]
 fn test_instrument_create_pgo_profiles_dir() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
-    project.run(&["pgo", "instrument"])?.assert_ok();
+    project.run(&["instrument"])?.assert_ok();
 
     assert!(project.default_profile_dir().is_dir());
 
@@ -17,7 +17,7 @@ fn test_instrument_create_pgo_profiles_dir() -> anyhow::Result<()> {
 #[test]
 fn test_instrument_run_instrumented_binary() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
-    project.run(&["pgo", "instrument"])?.assert_ok();
+    project.run(&["instrument"])?.assert_ok();
 
     run_command(&project.main_binary())?;
 
@@ -29,7 +29,7 @@ fn test_instrument_run_instrumented_binary() -> anyhow::Result<()> {
 #[test]
 fn test_optimize_no_profile() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
-    project.run(&["pgo", "optimize"])?.assert_error();
+    project.run(&["optimize"])?.assert_error();
 
     Ok(())
 }
@@ -38,9 +38,9 @@ fn test_optimize_no_profile() -> anyhow::Result<()> {
 fn test_optimize() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
 
-    project.run(&["pgo", "instrument"])?.assert_ok();
+    project.run(&["instrument"])?.assert_ok();
     run_command(&project.main_binary())?;
-    project.run(&["pgo", "optimize"])?.assert_ok();
+    project.run(&["optimize"])?.assert_ok();
     run_command(&project.main_binary())?;
 
     Ok(())
