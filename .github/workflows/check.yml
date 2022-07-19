@@ -31,11 +31,17 @@ jobs:
           command: build
           args: --all --all-targets
 
-      - name: Test
+      - name: Run unit tests
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --all
+          args: --lib
+
+      - name: Run integration tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --test pgo
 
       - name: Lint
         uses: actions-rs/cargo@v1
