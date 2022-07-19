@@ -1,4 +1,4 @@
-use crate::build::build_with_flags;
+use crate::build::{build_with_flags, handle_metadata_message};
 use crate::clear_directory;
 use crate::cli::cli_format_path;
 use crate::workspace::{get_cargo_workspace, get_pgo_directory};
@@ -49,14 +49,7 @@ pub fn pgo_instrument(args: PgoInstrumentArgs) -> anyhow::Result<()> {
                     log::error!("PGO instrumentation build has {}", "failed".red());
                 }
             }
-            Message::TextLine(line) => println!("{}", line),
-            Message::CompilerMessage(message) => {
-                print!(
-                    "{}",
-                    message.message.rendered.unwrap_or(message.message.message)
-                );
-            }
-            _ => {}
+            _ => handle_metadata_message(message),
         }
     }
 

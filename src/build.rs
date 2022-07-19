@@ -1,4 +1,5 @@
 use crate::get_default_target;
+use cargo_metadata::Message;
 use std::collections::HashMap;
 use std::fmt::Write;
 use std::process::{Command, Output};
@@ -75,6 +76,17 @@ fn parse_cargo_args(cargo_args: Vec<String>) -> CargoArgs {
         }
     }
     args
+}
+
+pub fn handle_metadata_message(message: Message) {
+    match message {
+        Message::TextLine(line) => println!("{}", line),
+        Message::CompilerMessage(message) => print!(
+            "{}",
+            message.message.rendered.unwrap_or(message.message.message)
+        ),
+        _ => {}
+    }
 }
 
 #[cfg(test)]

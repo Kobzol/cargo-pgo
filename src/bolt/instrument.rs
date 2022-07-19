@@ -4,7 +4,7 @@ use colored::Colorize;
 use std::path::Path;
 
 use crate::bolt::env::{find_bolt_env, BoltEnv};
-use crate::build::build_with_flags;
+use crate::build::{build_with_flags, handle_metadata_message};
 use crate::cli::cli_format_path;
 use crate::workspace::{get_bolt_directory, get_cargo_workspace};
 use crate::{clear_directory, run_command};
@@ -60,14 +60,7 @@ pub fn bolt_instrument(args: BoltInstrumentArgs) -> anyhow::Result<()> {
                     log::error!("BOLT instrumentation build has {}", "failed".red());
                 }
             }
-            Message::TextLine(line) => println!("{}", line),
-            Message::CompilerMessage(message) => {
-                print!(
-                    "{}",
-                    message.message.rendered.unwrap_or(message.message.message)
-                );
-            }
-            _ => {}
+            _ => handle_metadata_message(message),
         }
     }
 

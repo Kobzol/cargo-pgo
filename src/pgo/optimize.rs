@@ -8,7 +8,7 @@ use colored::Colorize;
 use humansize::file_size_opts::BINARY;
 use humansize::FileSize;
 
-use crate::build::build_with_flags;
+use crate::build::{build_with_flags, handle_metadata_message};
 use crate::cli::cli_format_path;
 use crate::pgo::env::{find_pgo_env, PgoEnv};
 use crate::pgo::llvm_profdata_install_hint;
@@ -57,14 +57,7 @@ pub fn pgo_optimize(args: PgoOptimizeArgs) -> anyhow::Result<()> {
                     println!("{}", "PGO optimized build has failed".red());
                 }
             }
-            Message::TextLine(line) => println!("{}", line),
-            Message::CompilerMessage(message) => {
-                print!(
-                    "{}",
-                    message.message.rendered.unwrap_or(message.message.message)
-                );
-            }
-            _ => {}
+            _ => handle_metadata_message(message),
         }
     }
 
