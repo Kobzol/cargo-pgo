@@ -1,6 +1,5 @@
 use colored::Colorize;
 
-mod build;
 pub(crate) mod env;
 pub mod instrument;
 pub mod optimize;

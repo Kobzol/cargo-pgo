@@ -1,6 +1,6 @@
 use cargo::core::Workspace;
 use cargo::util::important_paths::find_root_manifest_for_wd;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Finds the root `Cargo.toml` file.
 fn get_root_manifest() -> anyhow::Result<PathBuf> {
@@ -17,8 +17,16 @@ pub fn get_cargo_workspace(config: &cargo::Config) -> anyhow::Result<Workspace> 
 }
 
 pub fn get_pgo_directory(workspace: &Workspace) -> anyhow::Result<PathBuf> {
+    get_workspace_directory(workspace, Path::new("pgo-profiles"))
+}
+
+pub fn get_bolt_directory(workspace: &Workspace) -> anyhow::Result<PathBuf> {
+    get_workspace_directory(workspace, Path::new("bolt-profiles"))
+}
+
+fn get_workspace_directory(workspace: &Workspace, path: &Path) -> anyhow::Result<PathBuf> {
     let target_dir = workspace.target_dir();
-    let pgo_dir = target_dir.join("pgo-profiles");
+    let pgo_dir = target_dir.join(path);
     pgo_dir.create_dir()?;
     Ok(pgo_dir.into_path_unlocked())
 }

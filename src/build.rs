@@ -1,4 +1,5 @@
 use crate::get_default_target;
+use std::collections::HashMap;
 use std::fmt::Write;
 use std::process::{Command, Output};
 
@@ -9,10 +10,18 @@ struct CargoArgs {
 }
 
 /// Run `cargo build --release` with the provided RUSTFLAGS and Cargo arguments.
-pub fn build_with_flags(flags: String, cargo_args: Vec<String>) -> anyhow::Result<Output> {
+pub fn build_with_flags(flags: &str, cargo_args: Vec<String>) -> anyhow::Result<Output> {
     let mut rustflags = std::env::var("RUSTFLAGS").unwrap_or_default();
     write!(&mut rustflags, " {}", flags).unwrap();
 
+    let mut env = HashMap::default();
+    env.insert("RUSTFLAGS".to_string(), rustflags);
+
+    build(cargo_args, env)
+}
+
+/// Run cargo build --release with the provided env variables and Cargo arguments.
+pub fn build(cargo_args: Vec<String>, env: HashMap<String, String>) -> anyhow::Result<Output> {
     let parsed_args = parse_cargo_args(cargo_args);
 
     let mut command = Command::new("cargo");
@@ -38,7 +47,9 @@ pub fn build_with_flags(flags: String, cargo_args: Vec<String>) -> anyhow::Resul
     for arg in parsed_args.filtered {
         command.arg(arg);
     }
-    command.env("RUSTFLAGS", rustflags);
+    for (key, value) in env {
+        command.env(key, value);
+    }
     Ok(command.output()?)
 }
 
@@ -50,7 +61,7 @@ fn parse_cargo_args(cargo_args: Vec<String>) -> CargoArgs {
         match arg.as_str() {
             // Skip `--release`, we will pass it by ourselves.
             "--release" => {
-                log::warn!("Do not pass `--release` manually, it will be added automatically by `cargo-fdo`");
+                log::warn!("Do not pass `--release` manually, it will be added automatically by `cargo-pgo`");
             }
             // Skip `--message-format`, we need it to be JSON.
             "--message-format" => {
@@ -68,7 +79,7 @@ fn parse_cargo_args(cargo_args: Vec<String>) -> CargoArgs {
 
 #[cfg(test)]
 mod tests {
-    use crate::pgo::build::parse_cargo_args;
+    use crate::build::parse_cargo_args;
 
     #[test]
     fn test_parse_cargo_args_filter_release() {

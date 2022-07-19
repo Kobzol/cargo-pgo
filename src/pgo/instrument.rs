@@ -1,10 +1,9 @@
+use crate::build::build_with_flags;
 use crate::clear_directory;
 use crate::cli::cli_format_path;
-use crate::pgo::build::build_with_flags;
 use crate::workspace::{get_cargo_workspace, get_pgo_directory};
 use cargo_metadata::Message;
 use colored::Colorize;
-use std::fmt::Write;
 
 #[derive(clap::Parser, Debug)]
 #[clap(trailing_var_arg(true))]
@@ -23,13 +22,10 @@ pub fn pgo_instrument(args: PgoInstrumentArgs) -> anyhow::Result<()> {
         clear_directory(&pgo_dir)?;
     }
 
-    let mut flags = std::env::var("RUSTFLAGS").unwrap_or_default();
-    write!(&mut flags, " -Cprofile-generate={}", pgo_dir.display()).unwrap();
-
     log::info!("PGO profiles will be stored into {}", pgo_dir.display());
 
     let flags = format!("-Cprofile-generate={}", pgo_dir.display());
-    let output = build_with_flags(flags, args.cargo_args)?;
+    let output = build_with_flags(&flags, args.cargo_args)?;
 
     for message in Message::parse_stream(output.stdout.as_slice()) {
         let message = message?;

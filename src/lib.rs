@@ -1,10 +1,12 @@
 pub mod bolt;
+mod build;
 pub mod check;
 pub(crate) mod cli;
 pub mod pgo;
 pub(crate) mod workspace;
 
 use anyhow::anyhow;
+use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -13,7 +15,7 @@ pub fn resolve_binary(path: &Path) -> anyhow::Result<PathBuf> {
 }
 
 /// Runs a command with the provided arguments and returns its stdout.
-fn run_command(program: &str, args: &[&str]) -> anyhow::Result<String> {
+fn run_command<S: AsRef<OsStr>>(program: S, args: &[&str]) -> anyhow::Result<String> {
     let mut cmd = Command::new(program);
     for arg in args {
         cmd.arg(arg);

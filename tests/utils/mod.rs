@@ -1,4 +1,4 @@
-use cargo_fdo::get_default_target;
+use cargo_pgo::get_default_target;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use tempfile::TempDir;
@@ -12,14 +12,14 @@ pub struct CargoProject {
 impl CargoProject {
     pub fn run(&self, args: &[&str]) -> anyhow::Result<Output> {
         let mut command = Command::new("cargo");
-        command.arg("fdo");
+        command.arg("pgo");
         for arg in args {
             command.arg(arg);
         }
         command.current_dir(&self.dir);
 
         let path = std::env::var("PATH").unwrap_or_default();
-        let path = format!("{}:{}", cargo_fdo_target_dir().display(), path);
+        let path = format!("{}:{}", cargo_pgo_target_dir().display(), path);
 
         command.env("PATH", path);
 
@@ -40,8 +40,12 @@ impl CargoProject {
             .join(&self.name)
     }
 
-    pub fn default_profile_dir(&self) -> PathBuf {
+    pub fn default_pgo_profile_dir(&self) -> PathBuf {
         self.path("target/pgo-profiles")
+    }
+
+    pub fn default_bolt_profile_dir(&self) -> PathBuf {
+        self.path("target/bolt-profiles")
     }
 }
 
@@ -111,7 +115,7 @@ pub fn init_cargo_project() -> anyhow::Result<CargoProject> {
     })
 }
 
-fn cargo_fdo_target_dir() -> PathBuf {
+fn cargo_pgo_target_dir() -> PathBuf {
     let mut target_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     target_dir.push("target");
     target_dir.push("debug");

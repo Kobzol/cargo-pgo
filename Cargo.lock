@@ -156,7 +156,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cargo-fdo"
+name = "cargo-pgo"
 version = "0.1.0"
 dependencies = [
  "anyhow",

@@ -1,5 +1,5 @@
 [package]
-name = "cargo-fdo"
+name = "cargo-pgo"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.56.1"
@@ -36,6 +36,4 @@ colored = "2.0.0"
 cargo_metadata = "0.15.0"
 humansize = "1.1.1"
 semver = "1.0.12"
-
-[dev-dependencies]
 tempfile = "3.3.0"

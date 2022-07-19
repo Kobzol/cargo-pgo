@@ -9,7 +9,7 @@ fn test_instrument_create_pgo_profiles_dir() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
     project.run(&["instrument"])?.assert_ok();
 
-    assert!(project.default_profile_dir().is_dir());
+    assert!(project.default_pgo_profile_dir().is_dir());
 
     Ok(())
 }
@@ -21,7 +21,7 @@ fn test_instrument_run_instrumented_binary() -> anyhow::Result<()> {
 
     run_command(&project.main_binary())?;
 
-    assert!(!get_dir_files(&project.default_profile_dir())?.is_empty());
+    assert!(!get_dir_files(&project.default_pgo_profile_dir())?.is_empty());
 
     Ok(())
 }
