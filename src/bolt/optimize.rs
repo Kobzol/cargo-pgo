@@ -37,7 +37,6 @@ pub fn bolt_optimize(args: BoltOptimizeArgs) -> anyhow::Result<()> {
         match message {
             Message::CompilerArtifact(artifact) => {
                 if let Some(ref executable) = artifact.executable {
-                    println!("{:?} {}", &artifact, executable);
                     log::info!(
                         "Binary {} built successfully. It will be now optimized with BOLT.",
                         artifact.target.name.blue()
@@ -52,9 +51,9 @@ pub fn bolt_optimize(args: BoltOptimizeArgs) -> anyhow::Result<()> {
             }
             Message::BuildFinished(res) => {
                 if res.success {
-                    println!("{}", "BOLT optimized build successfully finished".green());
+                    log::info!("BOLT optimized build finished {}", "successfully".green());
                 } else {
-                    println!("{}", "BOLT optimized build has failed".red());
+                    log::error!("BOLT optimized build has {}", "failed".red());
                 }
             }
             _ => handle_metadata_message(message),
@@ -105,8 +104,8 @@ fn optimize_binary(
     .ok()
     .map_err(|error| anyhow!("Cannot optimize binary with BOLT: {}", error))?;
 
-    log::info!("BOLT stdout\n{}\n\n", output.stdout);
-    log::info!("BOLT stderr\n{}", output.stderr);
+    log::debug!("BOLT stdout\n{}\n\n", output.stdout);
+    log::debug!("BOLT stderr\n{}", output.stderr);
 
     Ok(target_path.into_std_path_buf())
 }
