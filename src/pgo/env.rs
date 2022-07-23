@@ -9,7 +9,11 @@ pub struct PgoEnv {
 
 pub fn find_pgo_env() -> anyhow::Result<PgoEnv> {
     // Try to resolve `llvm-profdata` from `llvm-tools-preview`
-    let mut libpath = PathBuf::from(run_command("rustc", &["--print", "target-libdir"])?);
+    let path = run_command("rustc", &["--print", "target-libdir"])?
+        .ok()?
+        .stdout;
+
+    let mut libpath = PathBuf::from(path);
     libpath.pop();
     libpath.push("bin/llvm-profdata");
 

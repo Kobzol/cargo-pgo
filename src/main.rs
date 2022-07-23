@@ -1,4 +1,5 @@
 use cargo_pgo::bolt::instrument::{bolt_instrument, BoltInstrumentArgs};
+use cargo_pgo::bolt::optimize::{bolt_optimize, BoltOptimizeArgs};
 use cargo_pgo::check::environment_check;
 use cargo_pgo::pgo::instrument::{pgo_instrument, PgoInstrumentArgs};
 use cargo_pgo::pgo::optimize::{pgo_optimize, PgoOptimizeArgs};
@@ -30,6 +31,8 @@ enum Subcommand {
 enum BoltArgs {
     /// Run `cargo build` with instrumentation to prepare for BOLT optimization.
     Instrument(BoltInstrumentArgs),
+    /// Built na optimized version of a binary using generated BOLT profiles.
+    Optimize(BoltOptimizeArgs),
 }
 
 fn run() -> anyhow::Result<()> {
@@ -41,6 +44,7 @@ fn run() -> anyhow::Result<()> {
         Subcommand::Instrument(args) => pgo_instrument(args),
         Subcommand::Optimize(args) => pgo_optimize(args),
         Subcommand::Bolt(BoltArgs::Instrument(args)) => bolt_instrument(args),
+        Subcommand::Bolt(BoltArgs::Optimize(args)) => bolt_optimize(args),
     }
 }
 

@@ -1,8 +1,9 @@
 use cargo_metadata::camino::Utf8PathBuf;
 use cargo_metadata::Message;
 use colored::Colorize;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
+use crate::bolt::bolt_rustflags;
 use crate::bolt::env::{find_bolt_env, BoltEnv};
 use crate::build::{build_with_flags, handle_metadata_message};
 use crate::cli::cli_format_path;
@@ -30,8 +31,7 @@ pub fn bolt_instrument(args: BoltInstrumentArgs) -> anyhow::Result<()> {
 
     log::info!("BOLT profiles will be stored into {}", bolt_dir.display());
 
-    let rustflags = "-C link-args=-Wl,-q";
-    let output = build_with_flags(rustflags, args.cargo_args)?;
+    let output = build_with_flags(bolt_rustflags(), args.cargo_args)?;
 
     for message in Message::parse_stream(output.stdout.as_slice()) {
         let message = message?;
@@ -42,11 +42,11 @@ pub fn bolt_instrument(args: BoltInstrumentArgs) -> anyhow::Result<()> {
                         "Binary {} built successfully. It will be now instrumented with BOLT.",
                         artifact.target.name.blue(),
                     );
-                    instrument_binary(&bolt_env, &executable, &bolt_dir)?;
+                    let instrumented_path = instrument_binary(&bolt_env, &executable, &bolt_dir)?;
                     log::info!(
                         "Binary {} instrumented successfully. Now run {} on your workload",
                         artifact.target.name.blue(),
-                        cli_format_path(&executable)
+                        cli_format_path(&instrumented_path.display())
                     );
                 }
             }
@@ -68,20 +68,22 @@ pub fn bolt_instrument(args: BoltInstrumentArgs) -> anyhow::Result<()> {
 }
 
 /// Instruments a binary using BOLT.
-/// If it succeeds, the original binary at `path` is overwritten with the instrumented binary.
+/// If it succeeds, returns the path to the instrumented binary.
 fn instrument_binary(
     bolt_env: &BoltEnv,
     path: &Utf8PathBuf,
     profile_dir: &Path,
-) -> anyhow::Result<()> {
-    let tmpdir = tempfile::tempdir()?;
-    let instrumented_file = tmpdir.path().to_path_buf().join("instrumented.bolt");
-
+) -> anyhow::Result<PathBuf> {
     let basename = path
         .as_path()
         .file_stem()
         .expect("Cannot extract executable basename");
     std::fs::create_dir_all(profile_dir.join(basename))?;
+
+    let target_path = path
+        .parent()
+        .expect("Cannot get parent of compiled binary")
+        .join(format!("{}-bolt-instrumented", basename));
 
     let profile_path = format!(
         "{}/{}/profile",
@@ -101,13 +103,9 @@ fn instrument_binary(
             &profile_path,
             "-update-debug-sections",
             "-o",
-            instrumented_file
-                .to_str()
-                .expect("Could not get path for a temporary file"),
+            target_path.as_str(),
         ],
     )?;
 
-    std::fs::copy(instrumented_file, path)?;
-
-    Ok(())
+    Ok(target_path.into_std_path_buf())
 }

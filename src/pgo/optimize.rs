@@ -43,7 +43,7 @@ pub fn pgo_optimize(args: PgoOptimizeArgs) -> anyhow::Result<()> {
         let message = message?;
         match message {
             Message::CompilerArtifact(artifact) => {
-                if artifact.target.kind.into_iter().any(|s| s == "bin") {
+                if let Some(_) = artifact.executable {
                     log::info!(
                         "PGO-optimized binary {} built successfully.",
                         artifact.target.name.blue()

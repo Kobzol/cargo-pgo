@@ -1,4 +1,5 @@
 use cargo_pgo::get_default_target;
+use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use tempfile::TempDir;
@@ -38,6 +39,22 @@ impl CargoProject {
             .join(get_default_target().unwrap())
             .join("release")
             .join(&self.name)
+    }
+
+    pub fn bolt_instrumented_binary(&self) -> PathBuf {
+        let binary = self.main_binary();
+        binary.with_file_name(format!(
+            "{}-bolt-instrumented",
+            binary.file_stem().unwrap().to_str().unwrap()
+        ))
+    }
+
+    pub fn bolt_optimized_binary(&self) -> PathBuf {
+        let binary = self.main_binary();
+        binary.with_file_name(format!(
+            "{}-bolt-optimized",
+            binary.file_stem().unwrap().to_str().unwrap()
+        ))
     }
 
     pub fn default_pgo_profile_dir(&self) -> PathBuf {
@@ -122,7 +139,7 @@ fn cargo_pgo_target_dir() -> PathBuf {
     target_dir
 }
 
-pub fn run_command(path: &Path) -> anyhow::Result<()> {
+pub fn run_command<S: AsRef<OsStr>>(path: S) -> anyhow::Result<()> {
     let status = Command::new(path).status()?;
     match status.success() {
         true => Ok(()),

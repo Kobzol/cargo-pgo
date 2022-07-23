@@ -8,20 +8,49 @@ pub(crate) mod workspace;
 use anyhow::anyhow;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, ExitStatus};
 
 pub fn resolve_binary(path: &Path) -> anyhow::Result<PathBuf> {
     Ok(which::which(path)?)
 }
 
-/// Runs a command with the provided arguments and returns its stdout.
-fn run_command<S: AsRef<OsStr>>(program: S, args: &[&str]) -> anyhow::Result<String> {
+#[derive(Debug)]
+struct Utf8Output {
+    stdout: String,
+    stderr: String,
+    status: ExitStatus,
+}
+
+impl Utf8Output {
+    pub fn ok(self) -> anyhow::Result<Self> {
+        if self.status.success() {
+            Ok(self)
+        } else {
+            Err(anyhow::anyhow!(
+                "Command ended with exit code {}\n{}",
+                self.status,
+                self.stderr
+            ))
+        }
+    }
+}
+
+/// Runs a command with the provided arguments and returns its stdout and stderr.
+fn run_command<S: AsRef<OsStr>>(program: S, args: &[&str]) -> anyhow::Result<Utf8Output> {
     let mut cmd = Command::new(program);
     for arg in args {
         cmd.arg(arg);
     }
+    log::debug!("Running command {:?}", cmd);
     cmd.stdout(std::process::Stdio::piped());
-    Ok(String::from_utf8(cmd.output()?.stdout)?)
+    cmd.stderr(std::process::Stdio::piped());
+
+    let output = cmd.output()?;
+    Ok(Utf8Output {
+        stdout: String::from_utf8(output.stdout)?,
+        stderr: String::from_utf8(output.stderr)?,
+        status: output.status,
+    })
 }
 
 /// Tries to find the default target triple used for compiling on the current host computer.
@@ -33,6 +62,7 @@ pub fn get_default_target() -> anyhow::Result<String> {
 
     // Parse the default target from stdout.
     let host = output
+        .stdout
         .lines()
         .find(|l| l.starts_with(HOST_FIELD))
         .map(|l| &l[HOST_FIELD.len()..])
