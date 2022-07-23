@@ -1,7 +1,5 @@
 use crate::utils::{get_dir_files, init_cargo_project, run_command};
 
-mod utils;
-
 use crate::utils::OutputExt;
 
 #[test]
