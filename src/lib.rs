@@ -3,6 +3,7 @@ mod build;
 pub mod check;
 pub(crate) mod cli;
 pub mod pgo;
+pub(crate) mod utils;
 pub(crate) mod workspace;
 
 use anyhow::anyhow;

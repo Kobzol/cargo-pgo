@@ -3,15 +3,20 @@ use std::path::Path;
 use std::process::Command;
 
 use anyhow::anyhow;
-use cargo_metadata::Message;
+use cargo_metadata::diagnostic::DiagnosticLevel;
+use cargo_metadata::{CompilerMessage, Message};
 use colored::Colorize;
 use humansize::file_size_opts::BINARY;
 use humansize::FileSize;
+use once_cell::sync::OnceCell;
+use regex::Regex;
+use rustc_demangle::{demangle, Demangle};
 
 use crate::build::{cargo_command_with_flags, handle_metadata_message};
 use crate::cli::cli_format_path;
 use crate::pgo::env::{find_pgo_env, PgoEnv};
 use crate::pgo::{llvm_profdata_install_hint, CargoCommand};
+use crate::utils::str::pluralize;
 use crate::workspace::{get_cargo_workspace, get_pgo_directory};
 
 #[derive(clap::Parser, Debug)]
@@ -39,6 +44,7 @@ pub fn pgo_optimize(args: PgoOptimizeArgs) -> anyhow::Result<()> {
 
     let output = cargo_command_with_flags(CargoCommand::Build, &flags, args.cargo_args)?;
 
+    let mut counter = MissingProfileCounter::default();
     for message in Message::parse_stream(output.stdout.as_slice()) {
         let message = message?;
         match message {
@@ -57,8 +63,28 @@ pub fn pgo_optimize(args: PgoOptimizeArgs) -> anyhow::Result<()> {
                     println!("{}", "PGO optimized build has failed".red());
                 }
             }
+            Message::CompilerMessage(msg) => {
+                if let Some(profile) = get_pgo_missing_profile(&msg) {
+                    log::debug!(
+                        "Missing profile data: {}/{}",
+                        profile.module,
+                        profile.function
+                    );
+                    counter.handle_missing_profile(profile);
+                } else {
+                    handle_metadata_message(Message::CompilerMessage(msg));
+                }
+            }
             _ => handle_metadata_message(message),
         }
+    }
+
+    if counter.counter > 0 {
+        log::warn!(
+            "PGO profile data was not found for {} {}.",
+            counter.counter,
+            pluralize("function", counter.counter)
+        );
     }
 
     Ok(())
@@ -141,4 +167,39 @@ fn merge_profiles(pgo_env: &PgoEnv, pgo_dir: &Path, target_profile: &Path) -> an
             String::from_utf8_lossy(&output.stderr).red()
         ));
     }
+}
+
+struct PgoMissingProfile<'msg> {
+    module: &'msg str,
+    function: Demangle<'msg>,
+}
+
+#[derive(Debug, Default)]
+struct MissingProfileCounter {
+    counter: usize,
+}
+
+impl MissingProfileCounter {
+    fn handle_missing_profile(&mut self, _profile: PgoMissingProfile) {
+        self.counter += 1;
+    }
+}
+
+fn get_pgo_missing_profile(message: &CompilerMessage) -> Option<PgoMissingProfile> {
+    static REGEX: OnceCell<Regex> = OnceCell::new();
+
+    let regex = REGEX.get_or_init(|| {
+        Regex::new("^(?P<module>.*): no profile data available for function (?P<function>.*?) .*$")
+            .unwrap()
+    });
+
+    if message.message.level != DiagnosticLevel::Warning {
+        return None;
+    }
+
+    regex.captures(&message.message.message).map(|regex_match| {
+        let module = regex_match.name("module").unwrap().as_str();
+        let function = demangle(regex_match.name("function").unwrap().as_str());
+        PgoMissingProfile { module, function }
+    })
 }

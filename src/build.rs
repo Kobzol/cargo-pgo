@@ -90,11 +90,17 @@ fn parse_cargo_args(cargo_args: Vec<String>) -> CargoArgs {
 
 pub fn handle_metadata_message(message: Message) {
     match message {
-        Message::TextLine(line) => println!("{}", line),
-        Message::CompilerMessage(message) => print!(
-            "{}",
-            message.message.rendered.unwrap_or(message.message.message)
-        ),
+        Message::TextLine(line) => {
+            log::debug!("TextLine {}", line);
+            println!("{}", line)
+        }
+        Message::CompilerMessage(message) => {
+            log::debug!("CompilerMessage {}", message);
+            print!(
+                "{}",
+                message.message.rendered.unwrap_or(message.message.message)
+            )
+        }
         _ => {}
     }
 }
