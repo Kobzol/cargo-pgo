@@ -42,7 +42,7 @@ pub fn bolt_optimize(args: BoltOptimizeArgs) -> anyhow::Result<()> {
                         "Binary {} built successfully. It will be now optimized with BOLT.",
                         artifact.target.name.blue()
                     );
-                    let optimized_path = optimize_binary(&bolt_env, &executable, &target_file)?;
+                    let optimized_path = optimize_binary(&bolt_env, executable, &target_file)?;
                     log::info!(
                         "Binary {} successfully optimized with BOLT. You can find it at {}.",
                         artifact.target.name.blue(),
@@ -68,7 +68,7 @@ pub fn bolt_optimize(args: BoltOptimizeArgs) -> anyhow::Result<()> {
 fn optimize_binary(
     bolt_env: &BoltEnv,
     binary: &Utf8PathBuf,
-    profile: &PathBuf,
+    profile: &Path,
 ) -> anyhow::Result<PathBuf> {
     log::debug!(
         "Optimizing {} with BOLT profile {}",

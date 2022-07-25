@@ -8,7 +8,7 @@ use clap::Parser;
 use env_logger::Env;
 
 #[derive(clap::Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[clap(author, version, about)]
 #[clap(bin_name("cargo"))]
 enum Args {
     #[clap(subcommand)]
@@ -20,8 +20,12 @@ enum Subcommand {
     /// Display information about your environment. Can be used to check whether it is prepared for
     /// PGO and BOLT.
     Info,
-    /// Run `cargo build` with instrumentation to prepare for PGO.
+    /// Run `cargo build` to create a PGO-instrumented binary. When executed, the binary will produce
+    /// profiles that can be later used in the `optimize` step.
     Build(PgoInstrumentArgs),
+    /// Run `cargo test` to generate PGO profiles from test execution, which can be later used
+    /// in the `optimize` step.
+    Test(PgoInstrumentArgs),
     /// Build an optimized version of a binary using generated PGO profiles.
     Optimize(PgoOptimizeArgs),
     /// Optimization using BOLT.
@@ -44,6 +48,7 @@ fn run() -> anyhow::Result<()> {
     match args {
         Subcommand::Info => environment_info(),
         Subcommand::Build(args) => pgo_instrument_command(args, CargoCommand::Build),
+        Subcommand::Test(args) => pgo_instrument_command(args, CargoCommand::Test),
         Subcommand::Optimize(args) => pgo_optimize(args),
         Subcommand::Bolt(BoltArgs::Instrument(args)) => bolt_instrument(args),
         Subcommand::Bolt(BoltArgs::Optimize(args)) => bolt_optimize(args),

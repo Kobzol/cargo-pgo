@@ -12,10 +12,12 @@ add its `bin` directory to PATH.",
     )
 }
 
+#[derive(Debug, Copy, Clone)]
 pub enum CargoCommand {
     Build,
     Test,
 }
+
 impl CargoCommand {
     pub fn to_str(&self) -> &str {
         match self {

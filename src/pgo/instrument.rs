@@ -36,11 +36,13 @@ pub fn pgo_instrument_command(
         match message {
             Message::CompilerArtifact(artifact) => {
                 if let Some(executable) = artifact.executable {
-                    log::info!(
-                        "PGO-instrumented binary {} built successfully. Now run {} on your workload",
-                        artifact.target.name.blue(),
-                        cli_format_path(&executable)
-                    );
+                    if let CargoCommand::Build = command {
+                        log::info!(
+                            "PGO-instrumented binary {} built successfully. Now run {} on your workload",
+                            artifact.target.name.blue(),
+                            cli_format_path(&executable)
+                        );
+                    }
                 }
             }
             Message::BuildFinished(res) => {

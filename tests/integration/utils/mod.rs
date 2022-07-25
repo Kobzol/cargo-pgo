@@ -33,6 +33,12 @@ impl CargoProject {
         self.dir.join(path)
     }
 
+    pub fn file<P: AsRef<Path>>(&mut self, path: P, code: &str) -> &mut Self {
+        let path = self.path(path.as_ref());
+        std::fs::write(path, code).expect("Could not write project file");
+        self
+    }
+
     pub fn main_binary(&self) -> PathBuf {
         self.dir
             .join("target")
@@ -86,8 +92,8 @@ pub trait OutputExt {
 impl OutputExt for Output {
     fn assert_ok(self) -> Self {
         if !self.status.success() {
-            eprintln!("{}", self.stdout());
-            eprintln!("{}", self.stderr());
+            eprintln!("Stdout: {}", self.stdout());
+            eprintln!("Stderr: {}", self.stderr());
             panic!("Output was not successful");
         }
         self
@@ -95,8 +101,8 @@ impl OutputExt for Output {
 
     fn assert_error(self) -> Self {
         if self.status.success() {
-            eprintln!("{}", self.stdout());
-            eprintln!("{}", self.stderr());
+            eprintln!("Stdout: {}", self.stdout());
+            eprintln!("Stderr: {}", self.stderr());
             panic!("Output was successful");
         }
         self
