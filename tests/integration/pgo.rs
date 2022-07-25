@@ -5,7 +5,7 @@ use crate::utils::OutputExt;
 #[test]
 fn test_instrument_create_pgo_profiles_dir() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
-    project.run(&["instrument"])?.assert_ok();
+    project.run(&["build"])?.assert_ok();
 
     assert!(project.default_pgo_profile_dir().is_dir());
 
@@ -15,7 +15,7 @@ fn test_instrument_create_pgo_profiles_dir() -> anyhow::Result<()> {
 #[test]
 fn test_instrument_run_instrumented_binary() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
-    project.run(&["instrument"])?.assert_ok();
+    project.run(&["build"])?.assert_ok();
 
     run_command(&project.main_binary())?;
 
@@ -36,7 +36,7 @@ fn test_optimize_no_profile() -> anyhow::Result<()> {
 fn test_optimize() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
 
-    project.run(&["instrument"])?.assert_ok();
+    project.run(&["build"])?.assert_ok();
     run_command(&project.main_binary())?;
     project.run(&["optimize"])?.assert_ok();
     run_command(&project.main_binary())?;

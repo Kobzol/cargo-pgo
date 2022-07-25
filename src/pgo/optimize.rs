@@ -8,10 +8,10 @@ use colored::Colorize;
 use humansize::file_size_opts::BINARY;
 use humansize::FileSize;
 
-use crate::build::{build_with_flags, handle_metadata_message};
+use crate::build::{cargo_command_with_flags, handle_metadata_message};
 use crate::cli::cli_format_path;
 use crate::pgo::env::{find_pgo_env, PgoEnv};
-use crate::pgo::llvm_profdata_install_hint;
+use crate::pgo::{llvm_profdata_install_hint, CargoCommand};
 use crate::workspace::{get_cargo_workspace, get_pgo_directory};
 
 #[derive(clap::Parser, Debug)]
@@ -37,7 +37,7 @@ pub fn pgo_optimize(args: PgoOptimizeArgs) -> anyhow::Result<()> {
         target_file.display()
     );
 
-    let output = build_with_flags(&flags, args.cargo_args)?;
+    let output = cargo_command_with_flags(CargoCommand::Build, &flags, args.cargo_args)?;
 
     for message in Message::parse_stream(output.stdout.as_slice()) {
         let message = message?;

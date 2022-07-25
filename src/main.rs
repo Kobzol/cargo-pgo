@@ -1,8 +1,9 @@
 use cargo_pgo::bolt::instrument::{bolt_instrument, BoltInstrumentArgs};
 use cargo_pgo::bolt::optimize::{bolt_optimize, BoltOptimizeArgs};
-use cargo_pgo::check::environment_check;
-use cargo_pgo::pgo::instrument::{pgo_instrument, PgoInstrumentArgs};
+use cargo_pgo::check::environment_info;
+use cargo_pgo::pgo::instrument::{pgo_instrument_command, PgoInstrumentArgs};
 use cargo_pgo::pgo::optimize::{pgo_optimize, PgoOptimizeArgs};
+use cargo_pgo::pgo::CargoCommand;
 use clap::Parser;
 use env_logger::Env;
 
@@ -16,10 +17,11 @@ enum Args {
 
 #[derive(clap::Parser, Debug)]
 enum Subcommand {
-    /// Check that your environment is prepared for PGO and BOLT.
-    Check,
+    /// Display information about your environment. Can be used to check whether it is prepared for
+    /// PGO and BOLT.
+    Info,
     /// Run `cargo build` with instrumentation to prepare for PGO.
-    Instrument(PgoInstrumentArgs),
+    Build(PgoInstrumentArgs),
     /// Build an optimized version of a binary using generated PGO profiles.
     Optimize(PgoOptimizeArgs),
     /// Optimization using BOLT.
@@ -40,8 +42,8 @@ fn run() -> anyhow::Result<()> {
 
     let Args::Pgo(args) = args;
     match args {
-        Subcommand::Check => environment_check(),
-        Subcommand::Instrument(args) => pgo_instrument(args),
+        Subcommand::Info => environment_info(),
+        Subcommand::Build(args) => pgo_instrument_command(args, CargoCommand::Build),
         Subcommand::Optimize(args) => pgo_optimize(args),
         Subcommand::Bolt(BoltArgs::Instrument(args)) => bolt_instrument(args),
         Subcommand::Bolt(BoltArgs::Optimize(args)) => bolt_optimize(args),

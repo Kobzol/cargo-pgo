@@ -9,7 +9,7 @@ use colored::Colorize;
 use std::path::PathBuf;
 
 /// Check that binaries required for performing PGO and BOLT can be found.
-pub fn environment_check() -> anyhow::Result<()> {
+pub fn environment_info() -> anyhow::Result<()> {
     let mut success = true;
     success &= check_rustc_version();
     success &= check_pgo_env();

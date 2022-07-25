@@ -8,8 +8,9 @@ use colored::Colorize;
 
 use crate::bolt::bolt_rustflags;
 use crate::bolt::env::{find_bolt_env, BoltEnv};
-use crate::build::{build_with_flags, handle_metadata_message};
+use crate::build::{cargo_command_with_flags, handle_metadata_message};
 use crate::cli::cli_format_path;
+use crate::pgo::CargoCommand;
 use crate::run_command;
 use crate::workspace::{get_bolt_directory, get_cargo_workspace};
 
@@ -30,7 +31,7 @@ pub fn bolt_optimize(args: BoltOptimizeArgs) -> anyhow::Result<()> {
     let target_file = bolt_dir.join("merged.profdata");
     merge_profiles(&bolt_env, &bolt_dir, &target_file)?;
 
-    let output = build_with_flags(bolt_rustflags(), args.cargo_args)?;
+    let output = cargo_command_with_flags(CargoCommand::Build, bolt_rustflags(), args.cargo_args)?;
 
     for message in Message::parse_stream(output.stdout.as_slice()) {
         let message = message?;

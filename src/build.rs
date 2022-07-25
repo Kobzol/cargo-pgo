@@ -1,4 +1,5 @@
 use crate::get_default_target;
+use crate::pgo::CargoCommand;
 use cargo_metadata::Message;
 use std::collections::HashMap;
 use std::fmt::Write;
@@ -10,24 +11,32 @@ struct CargoArgs {
     contains_target: bool,
 }
 
-/// Run `cargo build --release` with the provided RUSTFLAGS and Cargo arguments.
-pub fn build_with_flags(flags: &str, cargo_args: Vec<String>) -> anyhow::Result<Output> {
+/// Run `cargo` command in release mode with the provided RUSTFLAGS and Cargo arguments.
+pub fn cargo_command_with_flags(
+    command: CargoCommand,
+    flags: &str,
+    cargo_args: Vec<String>,
+) -> anyhow::Result<Output> {
     let mut rustflags = std::env::var("RUSTFLAGS").unwrap_or_default();
     write!(&mut rustflags, " {}", flags).unwrap();
 
     let mut env = HashMap::default();
     env.insert("RUSTFLAGS".to_string(), rustflags);
 
-    build(cargo_args, env)
+    cargo_command(command, cargo_args, env)
 }
 
-/// Run cargo build --release with the provided env variables and Cargo arguments.
-pub fn build(cargo_args: Vec<String>, env: HashMap<String, String>) -> anyhow::Result<Output> {
+/// Run `cargo` command in release mode with the provided env variables and Cargo arguments.
+pub fn cargo_command(
+    cargo_cmd: CargoCommand,
+    cargo_args: Vec<String>,
+    env: HashMap<String, String>,
+) -> anyhow::Result<Output> {
     let parsed_args = parse_cargo_args(cargo_args);
 
     let mut command = Command::new("cargo");
     command.args(&[
-        "build",
+        cargo_cmd.to_str(),
         "--release",
         "--message-format",
         "json-diagnostic-rendered-ansi",
@@ -66,6 +75,7 @@ fn parse_cargo_args(cargo_args: Vec<String>) -> CargoArgs {
             }
             // Skip `--message-format`, we need it to be JSON.
             "--message-format" => {
+                log::warn!("Do not pass `--message-format` manually, it will be added automatically by `cargo-pgo`");
                 iterator.next(); // skip flag value
             }
             "--target" => {
