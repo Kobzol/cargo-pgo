@@ -44,16 +44,16 @@ pub fn bolt_instrument(args: BoltInstrumentArgs) -> anyhow::Result<()> {
                         "Binary {} built successfully. It will be now instrumented with BOLT.",
                         artifact.target.name.blue(),
                     );
-                    let instrumented_path =
-                        instrument_binary(&bolt_env, &executable, &bolt_dir, &artifact).map_err(
-                            |error| {
-                                anyhow::anyhow!(
-                                    "Cannot instrument binary {} with BOLT: {:?}",
-                                    artifact.target.name,
-                                    error
-                                )
-                            },
-                        )?;
+                    let instrumented_path = instrument_binary(
+                        &bolt_env, executable, &bolt_dir, &artifact,
+                    )
+                    .map_err(|error| {
+                        anyhow::anyhow!(
+                            "Cannot instrument binary {} with BOLT: {:?}",
+                            artifact.target.name,
+                            error
+                        )
+                    })?;
                     log::info!(
                         "Binary {} instrumented successfully. Now run {} on your workload",
                         artifact.target.name.blue(),
@@ -108,7 +108,9 @@ fn instrument_binary(
             path.as_str(),
             "--instrumentation-file-append-pid",
             "--instrumentation-file",
-            &profile_path.to_str().unwrap(),
+            profile_path
+                .to_str()
+                .expect("Cannot get BOLT instrumentation file path"),
             "-update-debug-sections",
             "-o",
             target_path.as_str(),

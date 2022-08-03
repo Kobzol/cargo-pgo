@@ -161,13 +161,10 @@ fn gather_fdata_files(directory: &Path) -> Vec<PathBuf> {
     log::debug!("Finding profiles in {}", directory.display());
 
     let walker = WalkDir::new(directory).into_iter();
-    for file in walker {
-        if let Ok(entry) = file {
-            if entry.file_type().is_file() && entry.path().extension() == Some(OsStr::new("fdata"))
-            {
-                log::debug!("Found profile file: {:?}", entry);
-                files.push(entry.path().to_path_buf());
-            }
+    for entry in walker.flatten() {
+        if entry.file_type().is_file() && entry.path().extension() == Some(OsStr::new("fdata")) {
+            log::debug!("Found profile file: {:?}", entry);
+            files.push(entry.path().to_path_buf());
         }
     }
 
