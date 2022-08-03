@@ -172,6 +172,7 @@ dependencies = [
  "rustc-demangle",
  "semver",
  "tempfile",
+ "walkdir",
  "which",
 ]
 

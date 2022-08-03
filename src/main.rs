@@ -42,7 +42,7 @@ enum Subcommand {
 #[derive(clap::Parser, Debug)]
 enum BoltArgs {
     /// Run `cargo build` with instrumentation to prepare for BOLT optimization.
-    Instrument(BoltInstrumentArgs),
+    Build(BoltInstrumentArgs),
     /// Built na optimized version of a binary using generated BOLT profiles.
     Optimize(BoltOptimizeArgs),
 }
@@ -57,7 +57,7 @@ fn run() -> anyhow::Result<()> {
         Subcommand::Test(args) => pgo_instrument_command(args, CargoCommand::Test),
         Subcommand::Run(args) => pgo_instrument_command(args, CargoCommand::Run),
         Subcommand::Optimize(args) => pgo_optimize(args),
-        Subcommand::Bolt(BoltArgs::Instrument(args)) => bolt_instrument(args),
+        Subcommand::Bolt(BoltArgs::Build(args)) => bolt_instrument(args),
         Subcommand::Bolt(BoltArgs::Optimize(args)) => bolt_optimize(args),
         Subcommand::Clean => clean_artifacts(),
     }

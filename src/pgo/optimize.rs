@@ -33,7 +33,6 @@ pub fn pgo_optimize(args: PgoOptimizeArgs) -> anyhow::Result<()> {
 
     print_pgo_profile_stats(&pgo_dir)?;
 
-    // TODO: parametrize path to profile file
     let target_file = pgo_dir.join("merged.profdata");
     merge_profiles(&pgo_env, &pgo_dir, &target_file)?;
 

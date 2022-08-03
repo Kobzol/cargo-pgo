@@ -1,13 +1,16 @@
+use std::ffi::OsStr;
+use std::fs::File;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 use anyhow::anyhow;
 use cargo_metadata::camino::Utf8PathBuf;
 use cargo_metadata::Message;
 use colored::Colorize;
+use walkdir::WalkDir;
 
-use crate::bolt::bolt_rustflags;
 use crate::bolt::env::{find_bolt_env, BoltEnv};
+use crate::bolt::{bolt_rustflags, get_binary_profile_dir};
 use crate::build::{cargo_command_with_flags, handle_metadata_message};
 use crate::cli::cli_format_path;
 use crate::pgo::CargoCommand;
@@ -26,11 +29,6 @@ pub fn bolt_optimize(args: BoltOptimizeArgs) -> anyhow::Result<()> {
     let bolt_dir = get_bolt_directory(&workspace)?;
     let bolt_env = find_bolt_env()?;
 
-    // TODO: parametrize path to profile file
-    // TODO: do not join all profiles together, split them by binary
-    let target_file = bolt_dir.join("merged.profdata");
-    merge_profiles(&bolt_env, &bolt_dir, &target_file)?;
-
     let output = cargo_command_with_flags(CargoCommand::Build, bolt_rustflags(), args.cargo_args)?;
 
     for message in Message::parse_stream(output.stdout.as_slice()) {
@@ -42,12 +40,22 @@ pub fn bolt_optimize(args: BoltOptimizeArgs) -> anyhow::Result<()> {
                         "Binary {} built successfully. It will be now optimized with BOLT.",
                         artifact.target.name.blue()
                     );
-                    let optimized_path = optimize_binary(&bolt_env, executable, &target_file)?;
-                    log::info!(
-                        "Binary {} successfully optimized with BOLT. You can find it at {}.",
-                        artifact.target.name.blue(),
-                        cli_format_path(&optimized_path.display())
-                    );
+
+                    let profile_dir = get_binary_profile_dir(&bolt_dir, &artifact);
+                    let target_file = profile_dir.join("merged.profdata");
+                    if !merge_profiles(&bolt_env, &profile_dir, &target_file)? {
+                        log::warn!(
+                            "No profiles found for target {}. It will NOT be optimized!",
+                            artifact.target.name.blue()
+                        );
+                    } else {
+                        let optimized_path = optimize_binary(&bolt_env, executable, &target_file)?;
+                        log::info!(
+                            "Binary {} successfully optimized with BOLT. You can find it at {}.",
+                            artifact.target.name.blue(),
+                            cli_format_path(&optimized_path.display())
+                        );
+                    }
                 }
             }
             Message::BuildFinished(res) => {
@@ -97,6 +105,7 @@ fn optimize_binary(
             "-reorder-blocks=cache+",
             "-reorder-functions=hfsort",
             "-split-functions",
+            "2",
             "-split-all-cold",
             "-update-debug-sections",
             "-dyno-stats",
@@ -113,23 +122,54 @@ fn optimize_binary(
 
 fn merge_profiles(
     bolt_env: &BoltEnv,
-    bolt_dir: &Path,
+    profile_dir: &Path,
     target_profile: &Path,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<bool> {
     let mut command = Command::new(&bolt_env.merge_fdata);
-    command.args(&[
-        "-o",
-        &target_profile.display().to_string(),
-        &bolt_dir.display().to_string(),
-    ]);
+
+    let profile_files = gather_fdata_files(profile_dir);
+    if profile_files.is_empty() {
+        return Ok(false);
+    }
+
+    for file in profile_files {
+        command.arg(file);
+    }
+
+    let output_file = File::create(target_profile)?;
+    let output_stdio = Stdio::from(output_file);
+    command.stdout(output_stdio);
+
     let output = command.output()?;
     if output.status.success() {
-        log::info!("Merged BOLT profile(s) to {}", target_profile.display());
-        Ok(())
+        log::info!(
+            "Merged BOLT profile(s) to {}",
+            cli_format_path(target_profile.display())
+        );
+        Ok(true)
     } else {
-        return Err(anyhow!(
+        Err(anyhow!(
             "Failed to merge BOLT profile(s): {}",
             String::from_utf8_lossy(&output.stderr).red()
-        ));
+        ))
     }
+}
+
+fn gather_fdata_files(directory: &Path) -> Vec<PathBuf> {
+    let mut files = vec![];
+
+    log::debug!("Finding profiles in {}", directory.display());
+
+    let walker = WalkDir::new(directory).into_iter();
+    for file in walker {
+        if let Ok(entry) = file {
+            if entry.file_type().is_file() && entry.path().extension() == Some(OsStr::new("fdata"))
+            {
+                log::debug!("Found profile file: {:?}", entry);
+                files.push(entry.path().to_path_buf());
+            }
+        }
+    }
+
+    files
 }
