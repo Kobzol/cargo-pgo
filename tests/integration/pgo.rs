@@ -79,3 +79,13 @@ mod tests {
 
     Ok(())
 }
+
+#[test]
+fn test_run_optimize() -> anyhow::Result<()> {
+    let project = init_cargo_project()?;
+    project.run(&["run"])?.assert_ok();
+    project.run(&["optimize"])?.assert_ok();
+    run_command(&project.main_binary())?;
+
+    Ok(())
+}

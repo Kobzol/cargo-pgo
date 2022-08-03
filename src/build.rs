@@ -1,6 +1,7 @@
 use crate::get_default_target;
 use crate::pgo::CargoCommand;
 use cargo_metadata::Message;
+use colored::Colorize;
 use std::collections::HashMap;
 use std::fmt::Write;
 use std::process::{Command, Output};
@@ -23,11 +24,20 @@ pub fn cargo_command_with_flags(
     let mut env = HashMap::default();
     env.insert("RUSTFLAGS".to_string(), rustflags);
 
-    cargo_command(command, cargo_args, env)
+    let output = cargo_command(command, cargo_args, env)?;
+    if !output.status.success() {
+        Err(anyhow::anyhow!(
+            "Cargo error ({}): {}",
+            output.status,
+            String::from_utf8_lossy(&output.stderr).red()
+        ))
+    } else {
+        Ok(output)
+    }
 }
 
 /// Run `cargo` command in release mode with the provided env variables and Cargo arguments.
-pub fn cargo_command(
+fn cargo_command(
     cargo_cmd: CargoCommand,
     cargo_args: Vec<String>,
     env: HashMap<String, String>,
@@ -60,6 +70,7 @@ pub fn cargo_command(
     for (key, value) in env {
         command.env(key, value);
     }
+    log::debug!("Executing cargo command: {:?}", command);
     Ok(command.output()?)
 }
 
@@ -101,7 +112,9 @@ pub fn handle_metadata_message(message: Message) {
                 message.message.rendered.unwrap_or(message.message.message)
             )
         }
-        _ => {}
+        _ => {
+            panic!()
+        }
     }
 }
 

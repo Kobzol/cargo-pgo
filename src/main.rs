@@ -21,12 +21,15 @@ enum Subcommand {
     /// Display information about your environment. Can be used to check whether it is prepared for
     /// PGO and BOLT.
     Info,
-    /// Run `cargo build` to create a PGO-instrumented binary. When executed, the binary will produce
+    /// Execute `cargo build` to create a PGO-instrumented binary. When executed, the binary will produce
     /// profiles that can be later used in the `optimize` step.
     Build(PgoInstrumentArgs),
-    /// Run `cargo test` to produce PGO profiles from test execution, which can be later used
+    /// Execute `cargo test` to produce PGO profiles from test execution, which can be later used
     /// in the `optimize` step.
     Test(PgoInstrumentArgs),
+    /// Execute `cargo run` to produce PGO profiles from binary execution, which can be later used
+    /// in the `optimize` step.
+    Run(PgoInstrumentArgs),
     /// Build an optimized version of a binary using generated PGO profiles.
     Optimize(PgoOptimizeArgs),
     /// Clean PGO and BOLT artifacts from the disk.
@@ -52,6 +55,7 @@ fn run() -> anyhow::Result<()> {
         Subcommand::Info => environment_info(),
         Subcommand::Build(args) => pgo_instrument_command(args, CargoCommand::Build),
         Subcommand::Test(args) => pgo_instrument_command(args, CargoCommand::Test),
+        Subcommand::Run(args) => pgo_instrument_command(args, CargoCommand::Run),
         Subcommand::Optimize(args) => pgo_optimize(args),
         Subcommand::Bolt(BoltArgs::Instrument(args)) => bolt_instrument(args),
         Subcommand::Bolt(BoltArgs::Optimize(args)) => bolt_optimize(args),

@@ -16,6 +16,7 @@ add its `bin` directory to PATH.",
 pub enum CargoCommand {
     Build,
     Test,
+    Run,
 }
 
 impl CargoCommand {
@@ -23,6 +24,7 @@ impl CargoCommand {
         match self {
             CargoCommand::Build => "build",
             CargoCommand::Test => "test",
+            CargoCommand::Run => "run",
         }
     }
 }
