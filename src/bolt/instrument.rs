@@ -86,13 +86,7 @@ fn instrument_binary(
         .expect("Cannot get parent of compiled binary")
         .join(format!("{}-bolt-instrumented", basename));
 
-    let profile_path = format!(
-        "{}/{}/profile",
-        profile_dir
-            .to_str()
-            .expect("Could not get path for profile directory"),
-        basename
-    );
+    let profile_path = format!("{}/{}/profile", profile_dir.display(), basename);
 
     run_command(
         &bolt_env.bolt,

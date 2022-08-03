@@ -41,7 +41,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --test pgo
+          args: --test pgo clean
 
       - name: Lint
         uses: actions-rs/cargo@v1

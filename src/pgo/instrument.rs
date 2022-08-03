@@ -38,9 +38,16 @@ pub fn pgo_instrument_command(
                 if let Some(executable) = artifact.executable {
                     if let CargoCommand::Build = command {
                         log::info!(
-                            "PGO-instrumented binary {} built successfully. Now run {} on your workload",
+                            "PGO-instrumented binary {} built successfully. Now run {} on your \
+workload.\nFor more precise profiles, run it with the following environment variable: {}",
                             artifact.target.name.blue(),
-                            cli_format_path(&executable)
+                            cli_format_path(&executable),
+                            format!(
+                                "LLVM_PROFILE_FILE={}/{}_%m_%p.profraw",
+                                pgo_dir.display(),
+                                artifact.target.name
+                            )
+                            .blue()
                         );
                     }
                 }

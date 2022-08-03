@@ -1,6 +1,7 @@
 pub mod bolt;
 mod build;
 pub mod check;
+pub mod clean;
 pub(crate) mod cli;
 pub mod pgo;
 pub(crate) mod utils;

@@ -1,6 +1,7 @@
 use cargo_pgo::bolt::instrument::{bolt_instrument, BoltInstrumentArgs};
 use cargo_pgo::bolt::optimize::{bolt_optimize, BoltOptimizeArgs};
 use cargo_pgo::check::environment_info;
+use cargo_pgo::clean::clean_artifacts;
 use cargo_pgo::pgo::instrument::{pgo_instrument_command, PgoInstrumentArgs};
 use cargo_pgo::pgo::optimize::{pgo_optimize, PgoOptimizeArgs};
 use cargo_pgo::pgo::CargoCommand;
@@ -23,11 +24,13 @@ enum Subcommand {
     /// Run `cargo build` to create a PGO-instrumented binary. When executed, the binary will produce
     /// profiles that can be later used in the `optimize` step.
     Build(PgoInstrumentArgs),
-    /// Run `cargo test` to generate PGO profiles from test execution, which can be later used
+    /// Run `cargo test` to produce PGO profiles from test execution, which can be later used
     /// in the `optimize` step.
     Test(PgoInstrumentArgs),
     /// Build an optimized version of a binary using generated PGO profiles.
     Optimize(PgoOptimizeArgs),
+    /// Clean PGO and BOLT artifacts from the disk.
+    Clean,
     /// Optimization using BOLT.
     #[clap(subcommand)]
     Bolt(BoltArgs),
@@ -52,6 +55,7 @@ fn run() -> anyhow::Result<()> {
         Subcommand::Optimize(args) => pgo_optimize(args),
         Subcommand::Bolt(BoltArgs::Instrument(args)) => bolt_instrument(args),
         Subcommand::Bolt(BoltArgs::Optimize(args)) => bolt_optimize(args),
+        Subcommand::Clean => clean_artifacts(),
     }
 }
 
