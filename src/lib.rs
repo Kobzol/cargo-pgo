@@ -1,3 +1,8 @@
+//! This crate contains a Cargo subcommand designed for simplifying the usage of
+//! feedback-directed optimizations for Rust crates.
+//!
+//! You can find a usage guide for `cargo-pgo` at its [repository](https://github.com/kobzol/cargo-pgo).
+
 pub mod bolt;
 mod build;
 pub mod check;

@@ -5,7 +5,7 @@ edition = "2021"
 rust-version = "1.56.1"
 
 description = "Cargo subcommand for optimizing Rust binaries with PGO and BOLT."
-repository = "https://github.com/kobzol/cargo-bolt"
+repository = "https://github.com/kobzol/cargo-pgo"
 authors = ["Jakub Beránek <berykubik@gmail.com>"]
 keywords = [
     "pgo",
