@@ -21,15 +21,17 @@ pub fn pgo_instrument_command(
     let workspace = get_cargo_workspace(&config)?;
     let pgo_dir = get_pgo_directory(&workspace)?;
 
-    if pgo_dir.exists() {
-        log::info!("Profile directory already exists, it will be cleared");
-        clear_directory(&pgo_dir)?;
-    }
+    log::info!("Profile directory will be cleared");
+    clear_directory(&pgo_dir)?;
 
-    log::info!("PGO profiles will be stored into {}", pgo_dir.display());
+    log::info!(
+        "PGO profiles will be stored into {}",
+        cli_format_path(pgo_dir.display())
+    );
 
     let flags = format!("-Cprofile-generate={}", pgo_dir.display());
     let output = cargo_command_with_flags(command, &flags, args.cargo_args)?;
+    log::debug!("Cargo stderr\n {}", String::from_utf8_lossy(&output.stderr));
 
     for message in Message::parse_stream(output.stdout.as_slice()) {
         let message = message?;
@@ -38,9 +40,12 @@ pub fn pgo_instrument_command(
                 if let Some(executable) = artifact.executable {
                     if let CargoCommand::Build = command {
                         log::info!(
-                            "PGO-instrumented binary {} built successfully. Now run {} on your \
-workload.\nFor more precise profiles, run it with the following environment variable: {}",
-                            artifact.target.name.blue(),
+                            "PGO-instrumented binary {} built successfully.",
+                            artifact.target.name.blue()
+                        );
+                        log::info!(
+                            "Now run {} on your workload.\nFor more precise profiles, run \
+it with the following environment variable: {}",
                             cli_format_path(&executable),
                             format!(
                                 "LLVM_PROFILE_FILE={}/{}_%m_%p.profraw",

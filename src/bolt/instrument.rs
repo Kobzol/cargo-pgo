@@ -25,10 +25,8 @@ pub fn bolt_instrument(args: BoltInstrumentArgs) -> anyhow::Result<()> {
 
     let bolt_env = find_bolt_env()?;
 
-    if bolt_dir.exists() {
-        log::info!("Profile directory already exists, it will be cleared");
-        clear_directory(&bolt_dir)?;
-    }
+    log::info!("Profile directory will be cleared");
+    clear_directory(&bolt_dir)?;
 
     log::info!("BOLT profiles will be stored into {}", bolt_dir.display());
 

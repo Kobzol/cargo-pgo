@@ -43,6 +43,7 @@ pub fn pgo_optimize(args: PgoOptimizeArgs) -> anyhow::Result<()> {
     );
 
     let output = cargo_command_with_flags(CargoCommand::Build, &flags, args.cargo_args)?;
+    log::debug!("Cargo stderr\n {}", String::from_utf8_lossy(&output.stderr));
 
     let mut counter = MissingProfileCounter::default();
     for message in Message::parse_stream(output.stdout.as_slice()) {
@@ -159,7 +160,10 @@ fn merge_profiles(pgo_env: &PgoEnv, pgo_dir: &Path, target_profile: &Path) -> an
     ]);
     let output = command.output()?;
     if output.status.success() {
-        log::info!("Merged PGO profile(s) to {}", target_profile.display());
+        log::info!(
+            "Merged PGO profile(s) to {}",
+            cli_format_path(target_profile.display())
+        );
         Ok(())
     } else {
         return Err(anyhow!(
