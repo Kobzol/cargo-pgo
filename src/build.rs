@@ -112,9 +112,7 @@ pub fn handle_metadata_message(message: Message) {
                 message.message.rendered.unwrap_or(message.message.message)
             )
         }
-        _ => {
-            panic!()
-        }
+        _ => {}
     }
 }
 
