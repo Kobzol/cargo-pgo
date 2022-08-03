@@ -107,8 +107,18 @@ fn optimize_binary(
             "-split-functions",
             "2",
             "-split-all-cold",
+            "-jump-tables=move",
+            "-use-gnu-stack",
+            "-split-eh",
+            "-lite",
+            "1",
+            "-icf",
+            "1",
+            "-relocs",
             "-update-debug-sections",
             "-dyno-stats",
+            "-tail-duplication",
+            "cache",
         ],
     )?
     .ok()
