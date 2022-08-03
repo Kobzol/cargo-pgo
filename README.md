@@ -64,13 +64,15 @@ $ cargo pgo info
 wrapped commands, since it doesn't really make sense to perform PGO on debug builds. If you want to
 pass any commands to `cargo` itself, pass them after `--`.
 
-1) Generate the profiles
-First, you need to generate the PGO profiles. You can currently do it in three ways:
-    - Build an instrumented binary and then run it manually.
+1) **Generate the profiles**
+
+    First, you need to generate the PGO profiles. You can currently do it in three ways:
+    - Build an instrumented binary and then run it manually (**recommended**).
         ```bash
         $ cargo pgo build
         ```
-        After the binary is built, you should execute it on some workloads.
+        After the binary is built, you should execute it on some workloads. Note that the binary will
+        be located at `<target-dir>/<target-triple>/release/<binary-name>`.
     - Run an instrumented version of your binary.
         ```bash
         $ cargo pgo run
@@ -84,9 +86,10 @@ First, you need to generate the PGO profiles. You can currently do it in three w
        finish executing. Note that unless your test suite is really comprehensive, it might be better
        to create a binary and run it on some specific workloads.
 
-2) Build an optimized binary
-Once you have generated some profiles, you can execute `cargo pgo optimize` to build an optimized
-version of your binary.
+2) **Build an optimized binary**
+
+    Once you have generated some profiles, you can execute `cargo pgo optimize` to build an optimized
+    version of your binary.
 
 ### BOLT
 TODO
