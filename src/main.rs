@@ -11,12 +11,15 @@ use env_logger::Env;
 #[derive(clap::Parser, Debug)]
 #[clap(author, version, about)]
 #[clap(bin_name("cargo"))]
+#[clap(disable_help_subcommand(true))]
 enum Args {
     #[clap(subcommand)]
+    #[clap(author, version, about)]
     Pgo(Subcommand),
 }
 
-#[derive(clap::Parser, Debug)]
+#[derive(clap::Subcommand, Debug)]
+#[clap(setting(clap::AppSettings::DeriveDisplayOrder))]
 enum Subcommand {
     /// Display information about your environment. Can be used to check whether it is prepared for
     /// PGO and BOLT.
@@ -32,18 +35,18 @@ enum Subcommand {
     Run(PgoInstrumentArgs),
     /// Build an optimized version of a binary using generated PGO profiles.
     Optimize(PgoOptimizeArgs),
-    /// Clean PGO and BOLT artifacts from the disk.
-    Clean,
     /// Optimization using BOLT.
     #[clap(subcommand)]
     Bolt(BoltArgs),
+    /// Clean PGO and BOLT artifacts from the disk.
+    Clean,
 }
 
-#[derive(clap::Parser, Debug)]
+#[derive(clap::Subcommand, Debug)]
 enum BoltArgs {
     /// Run `cargo build` with instrumentation to prepare for BOLT optimization.
     Build(BoltInstrumentArgs),
-    /// Built na optimized version of a binary using generated BOLT profiles.
+    /// Built an optimized version of a binary using generated BOLT profiles.
     Optimize(BoltOptimizeArgs),
 }
 
