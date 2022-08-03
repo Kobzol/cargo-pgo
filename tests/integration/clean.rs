@@ -16,6 +16,7 @@ fn test_clean_pgo_dir() -> anyhow::Result<()> {
 }
 
 #[test]
+#[ignore]
 fn test_clean_bolt_dir() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
     project.run(&["bolt", "instrument"])?.assert_ok();
