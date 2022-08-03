@@ -10,10 +10,9 @@ authors = ["Jakub Beránek <berykubik@gmail.com>"]
 keywords = [
     "pgo",
     "bolt",
-    "cargo",
     "optimization",
-    "feedback-directed-optimization",
-    "profile-guided-optimization"
+    "profile-guided-opt",
+    "cargo",
 ]
 categories = ["development-tools::cargo-plugins"]
 
