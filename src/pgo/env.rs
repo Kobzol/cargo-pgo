@@ -23,8 +23,18 @@ pub fn find_pgo_env() -> anyhow::Result<PgoEnv> {
         });
     }
 
+    libpath.set_file_name("llvm-profdata.exe");
+
+    if libpath.exists() {
+        return Ok(PgoEnv {
+            llvm_profdata: libpath,
+        });
+    }
+
     // Try to find `llvm-profdata` directly in PATH
-    if let Ok(llvm_profdata) = resolve_binary(Path::new("llvm-profdata")) {
+    if let Ok(llvm_profdata) = resolve_binary(Path::new("llvm-profdata"))
+        .or_else(|_| resolve_binary(Path::new("llvm-profdata.exe")))
+    {
         log::warn!(
             "llvm-profdata was resolved from PATH. \
 Make sure that its version is compatible with rustc! If not, run `{}`.",
