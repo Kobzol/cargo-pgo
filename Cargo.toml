@@ -20,7 +20,7 @@ categories = ["development-tools::cargo-plugins"]
 readme = "README.md"
 license = "MIT"
 include = [
-    "src/*.rs",
+    "src/**/*.rs",
     "Cargo.toml",
     "README.md"
 ]
