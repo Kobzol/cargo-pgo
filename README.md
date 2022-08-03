@@ -13,8 +13,7 @@ and [BOLT](https://github.com/llvm/llvm-project/tree/main/bolt) to optimize Rust
 $ cargo install cargo-pgo
 ```
 
-You will also need some LLVM tools for both PGO and BOLT.
-Specifically, you will need the `llvm-profdata` binary for PGO and `llvm-bolt` and `merge-fdata`
+You will also need the `llvm-profdata` binary for PGO and `llvm-bolt` and `merge-fdata`
 binaries for BOLT.
 
 You can install the PGO helper binary by adding the `llvm-tools-preview` component to your toolchain
@@ -28,6 +27,7 @@ guide.
 
 ## Features
 This command makes it simpler to use **feedback-directed optimizations** for optimizing Rust binaries.
+It enables you to:
 
 - Optimize binaries with PGO
 - Optimize binaries with BOLT
@@ -49,8 +49,47 @@ consists of three general steps:
     substantially different workload, the optimizations might not work (or they might even make your
     binary slower!).
 
-## Usage
+### Example
+![Example usage of the tool](docs/terminal.gif)
 
+## **Usage**
+Before you start to optimize your binaries, you should first check if your environment is set up
+correctly, at least for PGO (BOLT is more complicated). You can do that using the `info` command:
+```bash
+$ cargo pgo info
+```
+
+### PGO
+`cargo-pgo` provides commands that wrap Cargo commands. It will automatically add `--release` to all
+wrapped commands, since it doesn't really make sense to perform PGO on debug builds. If you want to
+pass any commands to `cargo` itself, pass them after `--`.
+
+1) Generate the profiles
+First, you need to generate the PGO profiles. You can currently do it in three ways:
+    - Build an instrumented binary and then run it manually.
+        ```bash
+        $ cargo pgo build
+        ```
+        After the binary is built, you should execute it on some workloads.
+    - Run an instrumented version of your binary.
+        ```bash
+        $ cargo pgo run
+        ```
+        This command will instrument the binary and then execute it right away.
+    - Run tests using an instrumented binary.
+       ```bash
+       $ cargo pgo test
+       ```
+       In this case you do not have to do anything else, the profiles will be generated after the tests
+       finish executing. Note that unless your test suite is really comprehensive, it might be better
+       to create a binary and run it on some specific workloads.
+
+2) Build an optimized binary
+Once you have generated some profiles, you can execute `cargo pgo optimize` to build an optimized
+version of your binary.
+
+### BOLT
+TODO
 
 ## BOLT installation
 Here's a short guide how to compile LLVM with BOLT. You will need a recent compiler, `CMake` and
@@ -61,14 +100,19 @@ Here's a short guide how to compile LLVM with BOLT. You will need a recent compi
     $ git clone https://github.com/llvm/llvm-project
     $ cd llvm-project 
     ```
-2) Prepare the build
+2) (Optional) Checkout a stable version, at least 14.0.0
+    ```bash
+    $ git checkout llvmorg-14.0.5
+    ```
+   Note that BOLT is being actively fixed, so a `trunk` version of LLVM might actually work better.
+3) Prepare the build
     ```bash
     $ cmake -S llvm -B build -G ninja \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_INSTALL_PREFIX=${PWD}/llvm-install \
       -DLLVM_ENABLE_PROJECTS="clang;lld;compiler-rt;bolt"
     ```
-3) Compile LLVM with BOLT
+4) Compile LLVM with BOLT
     ```bash
     $ cd build
     $ ninja
@@ -78,9 +122,9 @@ Here's a short guide how to compile LLVM with BOLT. You will need a recent compi
     to `$PATH` to make BOLT usable with `cargo-pgo`.
 
 ## Related work
-- [cargo-pgo](https://github.com/vadimcn/cargo-pgo) I basically reimplemented this cargo command
-independently, it uses an almost identical approach, but doesn't support BOLT. It's not maintained
-anymore and I got the permission from its author to (re)use its name.
+- [cargo-pgo](https://github.com/vadimcn/cargo-pgo) I basically independently reimplemented this
+crate. It uses an almost identical approach, but doesn't support BOLT. It's not maintained
+anymore, I got a permission from its author to (re)use its name.
 
 ## License
 [MIT](LICENSE)
