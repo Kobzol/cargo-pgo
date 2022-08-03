@@ -58,15 +58,15 @@ pub fn pgo_optimize(args: PgoOptimizeArgs) -> anyhow::Result<()> {
             }
             Message::BuildFinished(res) => {
                 if res.success {
-                    println!("{}", "PGO optimized build successfully finished".green());
+                    println!("{}", "PGO optimized build successfully finished.".green());
                 } else {
-                    println!("{}", "PGO optimized build has failed".red());
+                    println!("{}", "PGO optimized build has failed.".red());
                 }
             }
             Message::CompilerMessage(msg) => {
                 if let Some(profile) = get_pgo_missing_profile(&msg) {
                     log::debug!(
-                        "Missing profile data: {}/{}",
+                        "Missing profile data: {}/{}.",
                         profile.module,
                         profile.function
                     );
@@ -105,7 +105,7 @@ fn gather_pgo_profile_stats(pgo_dir: &Path) -> anyhow::Result<ProfileStats> {
         let metadata = entry.metadata()?;
 
         if metadata.is_file() && entry.path().extension() == Some(OsStr::new("profraw")) {
-            log::debug!("Found profile file {}", entry.path().display());
+            log::debug!("Found profile file {}.", entry.path().display());
             stats.total_size += metadata.len();
             stats.file_count += 1;
         }
@@ -115,7 +115,7 @@ fn gather_pgo_profile_stats(pgo_dir: &Path) -> anyhow::Result<ProfileStats> {
 }
 
 fn print_pgo_profile_stats(pgo_dir: &Path) -> anyhow::Result<()> {
-    log::debug!("Locating PGO profile files at {}", pgo_dir.display());
+    log::debug!("Locating PGO profile files at {}.", pgo_dir.display());
 
     let stats = gather_pgo_profile_stats(pgo_dir)?;
     if stats.file_count == 0 {
@@ -126,7 +126,7 @@ fn print_pgo_profile_stats(pgo_dir: &Path) -> anyhow::Result<()> {
     }
 
     log::info!(
-        "Found {} PGO profile {} with total size {} at {}",
+        "Found {} PGO profile {} with total size {} at {}.",
         stats.file_count,
         if stats.file_count > 1 {
             "files"
@@ -143,7 +143,7 @@ fn get_pgo_env() -> anyhow::Result<PgoEnv> {
     let pgo_env =
         find_pgo_env().map_err(|error| anyhow!("{}\n{}", error, llvm_profdata_install_hint()))?;
     log::debug!(
-        "Found `llvm-profdata` at {}",
+        "Found `llvm-profdata` at {}.",
         pgo_env.llvm_profdata.display()
     );
     Ok(pgo_env)
@@ -160,13 +160,13 @@ fn merge_profiles(pgo_env: &PgoEnv, pgo_dir: &Path, target_profile: &Path) -> an
     let output = command.output()?;
     if output.status.success() {
         log::info!(
-            "Merged PGO profile(s) to {}",
+            "Merged PGO profile(s) to {}.",
             cli_format_path(target_profile.display())
         );
         Ok(())
     } else {
         return Err(anyhow!(
-            "Failed to merge PGO profile(s): {}",
+            "Failed to merge PGO profile(s): {}.",
             String::from_utf8_lossy(&output.stderr).red()
         ));
     }

@@ -21,11 +21,11 @@ pub fn pgo_instrument_command(
     let workspace = get_cargo_workspace(&config)?;
     let pgo_dir = get_pgo_directory(&workspace)?;
 
-    log::info!("Profile directory will be cleared");
+    log::info!("Profile directory will be cleared.");
     clear_directory(&pgo_dir)?;
 
     log::info!(
-        "PGO profiles will be stored into {}",
+        "PGO profiles will be stored into {}.",
         cli_format_path(pgo_dir.display())
     );
 
@@ -45,7 +45,7 @@ pub fn pgo_instrument_command(
                         );
                         log::info!(
                             "Now run {} on your workload.\nFor more precise profiles, run \
-it with the following environment variable: {}",
+it with the following environment variable: {}.",
                             cli_format_path(&executable),
                             format!(
                                 "LLVM_PROFILE_FILE={}/{}_%m_%p.profraw",
@@ -60,11 +60,11 @@ it with the following environment variable: {}",
             Message::BuildFinished(res) => {
                 if res.success {
                     log::info!(
-                        "PGO instrumentation build finished {}",
+                        "PGO instrumentation build finished {}.",
                         "successfully".green()
                     );
                 } else {
-                    log::error!("PGO instrumentation build has {}", "failed".red());
+                    log::error!("PGO instrumentation build has {}.", "failed".red());
                 }
             }
             _ => handle_metadata_message(message),

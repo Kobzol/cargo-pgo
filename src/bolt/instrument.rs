@@ -25,11 +25,11 @@ pub fn bolt_instrument(args: BoltInstrumentArgs) -> anyhow::Result<()> {
 
     let bolt_env = find_bolt_env()?;
 
-    log::info!("Profile directory will be cleared");
+    log::info!("Profile directory will be cleared.");
     clear_directory(&bolt_dir)?;
 
     log::info!(
-        "BOLT profiles will be stored into {}",
+        "BOLT profiles will be stored into {}.",
         cli_format_path(bolt_dir.display())
     );
 
@@ -49,13 +49,13 @@ pub fn bolt_instrument(args: BoltInstrumentArgs) -> anyhow::Result<()> {
                     )
                     .map_err(|error| {
                         anyhow::anyhow!(
-                            "Cannot instrument binary {} with BOLT: {:?}",
+                            "Cannot instrument binary {} with BOLT: {:?}.",
                             artifact.target.name,
                             error
                         )
                     })?;
                     log::info!(
-                        "Binary {} instrumented successfully. Now run {} on your workload",
+                        "Binary {} instrumented successfully. Now run {} on your workload.",
                         artifact.target.name.blue(),
                         cli_format_path(&instrumented_path.display())
                     );
@@ -64,11 +64,11 @@ pub fn bolt_instrument(args: BoltInstrumentArgs) -> anyhow::Result<()> {
             Message::BuildFinished(res) => {
                 if res.success {
                     log::info!(
-                        "BOLT instrumentation build finished {}",
+                        "BOLT instrumentation build finished {}.",
                         "successfully".green()
                     );
                 } else {
-                    log::error!("BOLT instrumentation build has {}", "failed".red());
+                    log::error!("BOLT instrumentation build has {}.", "failed".red());
                 }
             }
             _ => handle_metadata_message(message),

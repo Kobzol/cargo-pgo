@@ -60,9 +60,9 @@ pub fn bolt_optimize(args: BoltOptimizeArgs) -> anyhow::Result<()> {
             }
             Message::BuildFinished(res) => {
                 if res.success {
-                    log::info!("BOLT optimized build finished {}", "successfully".green());
+                    log::info!("BOLT optimized build finished {}.", "successfully".green());
                 } else {
-                    log::error!("BOLT optimized build has {}", "failed".red());
+                    log::error!("BOLT optimized build has {}.", "failed".red());
                 }
             }
             _ => handle_metadata_message(message),
@@ -79,7 +79,7 @@ fn optimize_binary(
     profile: &Path,
 ) -> anyhow::Result<PathBuf> {
     log::debug!(
-        "Optimizing {} with BOLT profile {}",
+        "Optimizing {} with BOLT profile {}.",
         binary.as_str(),
         profile.display()
     );
@@ -102,27 +102,23 @@ fn optimize_binary(
             profile.to_str().expect("Could not convert profile path"),
             "-o",
             target_path.as_str(),
-            "-reorder-blocks=cache+",
+            "-reorder-blocks=ext-tsp",
             "-reorder-functions=hfsort",
-            "-split-functions",
-            "2",
+            "-split-functions=2",
             "-split-all-cold",
             "-jump-tables=move",
             "-use-gnu-stack",
             "-split-eh",
-            "-lite",
-            "1",
-            "-icf",
-            "1",
+            "-lite=1",
+            "-icf=1",
             "-relocs",
             "-update-debug-sections",
             "-dyno-stats",
-            "-tail-duplication",
-            "cache",
+            "-tail-duplication=cache",
         ],
     )?
     .ok()
-    .map_err(|error| anyhow!("Cannot optimize binary with BOLT: {}", error))?;
+    .map_err(|error| anyhow!("Cannot optimize binary with BOLT: {}.", error))?;
 
     log::debug!("BOLT stdout\n{}\n\n", output.stdout);
     log::debug!("BOLT stderr\n{}", output.stderr);
@@ -153,13 +149,13 @@ fn merge_profiles(
     let output = command.output()?;
     if output.status.success() {
         log::info!(
-            "Merged BOLT profile(s) to {}",
+            "Merged BOLT profile(s) to {}.",
             cli_format_path(target_profile.display())
         );
         Ok(true)
     } else {
         Err(anyhow!(
-            "Failed to merge BOLT profile(s): {}",
+            "Failed to merge BOLT profile(s): {}.",
             String::from_utf8_lossy(&output.stderr).red()
         ))
     }
@@ -168,12 +164,12 @@ fn merge_profiles(
 fn gather_fdata_files(directory: &Path) -> Vec<PathBuf> {
     let mut files = vec![];
 
-    log::debug!("Finding profiles in {}", directory.display());
+    log::debug!("Finding profiles in {}.", directory.display());
 
     let walker = WalkDir::new(directory).into_iter();
     for entry in walker.flatten() {
         if entry.file_type().is_file() && entry.path().extension() == Some(OsStr::new("fdata")) {
-            log::debug!("Found profile file: {:?}", entry);
+            log::debug!("Found profile file: {:?}.", entry);
             files.push(entry.path().to_path_buf());
         }
     }
