@@ -21,7 +21,7 @@ pub fn pgo_instrument_command(
     let workspace = get_cargo_workspace(&config)?;
     let pgo_dir = get_pgo_directory(&workspace)?;
 
-    log::info!("Profile directory will be cleared.");
+    log::info!("PGO profile directory will be cleared.");
     clear_directory(&pgo_dir)?;
 
     log::info!(

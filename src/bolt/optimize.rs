@@ -10,7 +10,7 @@ use colored::Colorize;
 use walkdir::WalkDir;
 
 use crate::bolt::env::{find_bolt_env, BoltEnv};
-use crate::bolt::{bolt_rustflags, get_binary_profile_dir};
+use crate::bolt::{bolt_pgo_rustflags, get_binary_profile_dir};
 use crate::build::{cargo_command_with_flags, handle_metadata_message};
 use crate::cli::cli_format_path;
 use crate::pgo::CargoCommand;
@@ -20,6 +20,11 @@ use crate::workspace::{get_bolt_directory, get_cargo_workspace};
 #[derive(clap::Parser, Debug)]
 #[clap(trailing_var_arg(true))]
 pub struct BoltOptimizeArgs {
+    /// Optimize a PGO-optimized binary. To use this, you must already have PGO profiles on disk.
+    /// Use this flag only if you have also used it for `cargo pgo bolt build`.
+    #[clap(long)]
+    with_pgo: bool,
+    /// Additional arguments that will be passed to `cargo build`.
     cargo_args: Vec<String>,
 }
 
@@ -29,7 +34,8 @@ pub fn bolt_optimize(args: BoltOptimizeArgs) -> anyhow::Result<()> {
     let bolt_dir = get_bolt_directory(&workspace)?;
     let bolt_env = find_bolt_env()?;
 
-    let output = cargo_command_with_flags(CargoCommand::Build, bolt_rustflags(), args.cargo_args)?;
+    let flags = bolt_pgo_rustflags(&workspace, args.with_pgo)?;
+    let output = cargo_command_with_flags(CargoCommand::Build, &flags, args.cargo_args)?;
 
     for message in Message::parse_stream(output.stdout.as_slice()) {
         let message = message?;
@@ -114,7 +120,6 @@ fn optimize_binary(
             "-relocs",
             "-update-debug-sections",
             "-dyno-stats",
-            "-tail-duplication=cache",
         ],
     )?
     .ok()

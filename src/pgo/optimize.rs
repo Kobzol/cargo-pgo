@@ -25,21 +25,26 @@ pub struct PgoOptimizeArgs {
     cargo_args: Vec<String>,
 }
 
+/// Merges PGO profiles and creates RUSTFLAGS that use them.
+pub fn prepare_pgo_optimization_flags(pgo_env: &PgoEnv, pgo_dir: &Path) -> anyhow::Result<String> {
+    print_pgo_profile_stats(pgo_dir)?;
+
+    let target_file = pgo_dir.join("merged.profdata");
+    merge_profiles(pgo_env, pgo_dir, &target_file)?;
+
+    Ok(format!(
+        "-Cprofile-use={} -Cllvm-args=-pgo-warn-missing-function",
+        target_file.display()
+    ))
+}
+
 pub fn pgo_optimize(args: PgoOptimizeArgs) -> anyhow::Result<()> {
     let config = cargo::Config::default()?;
     let workspace = get_cargo_workspace(&config)?;
     let pgo_dir = get_pgo_directory(&workspace)?;
     let pgo_env = get_pgo_env()?;
 
-    print_pgo_profile_stats(&pgo_dir)?;
-
-    let target_file = pgo_dir.join("merged.profdata");
-    merge_profiles(&pgo_env, &pgo_dir, &target_file)?;
-
-    let flags = format!(
-        "-Cprofile-use={} -Cllvm-args=-pgo-warn-missing-function",
-        target_file.display()
-    );
+    let flags = prepare_pgo_optimization_flags(&pgo_env, &pgo_dir)?;
 
     let output = cargo_command_with_flags(CargoCommand::Build, &flags, args.cargo_args)?;
     log::debug!("Cargo stderr\n {}", String::from_utf8_lossy(&output.stderr));
@@ -139,7 +144,7 @@ fn print_pgo_profile_stats(pgo_dir: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn get_pgo_env() -> anyhow::Result<PgoEnv> {
+pub fn get_pgo_env() -> anyhow::Result<PgoEnv> {
     let pgo_env =
         find_pgo_env().map_err(|error| anyhow!("{}\n{}", error, llvm_profdata_install_hint()))?;
     log::debug!(

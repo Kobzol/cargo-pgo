@@ -36,6 +36,7 @@ consists of three general steps:
 2) **Gather performance profiles**
     - Run your instrumented binary on representative workloads. The binary will generate profile files
     on disk which will be then used to optimize the binary.
+    - Try to gather as much data as possible. Ideally, run your binary for at least a minute or more.
 3) **Build an optimized binary using generated profiles**
     - The compiler will use the generated profiles to build an optimized version of your binary.
     - The binary will be optimized with respect to the profiled workloads. If you execute it on a
@@ -105,6 +106,23 @@ you have to use for gathering profiles and executing the optimized code.
 
    Once you have generated some profiles, you can execute `cargo pgo bolt optimize` to build an
    optimized version of your binary. The optimized binary will be named `<binary-name>-bolt-optimized`.
+
+## BOLT + PGO
+Yes, BOLT and PGO can even be combined :) To do that, you should first generate PGO profiles and
+then use BOLT on already PGO optimized binaries. You can do that using the `--with-pgo` flag:
+
+```bash
+# Build PGO instrumented binary
+$ cargo pgo build
+# Run binary to gather PGO profiles
+$ ./target/.../<binary>
+# Build BOLT instrumented binary using PGO profiles
+$ cargo pgo bolt build --with-pgo
+# Run binary to gather BOLT profiles
+$ ./target/.../<binary>-bolt-instrumented
+# Optimize a PGO-optimized binary with BOLT
+$ cargo pgo bolt optimize --with-pgo
+```
 
 ### BOLT installation
 Here's a short guide how to compile LLVM with BOLT. You will need a recent compiler, `CMake` and

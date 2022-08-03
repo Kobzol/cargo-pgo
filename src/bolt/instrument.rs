@@ -1,10 +1,11 @@
+use std::path::{Path, PathBuf};
+
 use cargo_metadata::camino::Utf8PathBuf;
 use cargo_metadata::{Artifact, Message};
 use colored::Colorize;
-use std::path::{Path, PathBuf};
 
 use crate::bolt::env::{find_bolt_env, BoltEnv};
-use crate::bolt::{bolt_rustflags, get_binary_profile_dir};
+use crate::bolt::{bolt_pgo_rustflags, get_binary_profile_dir};
 use crate::build::{cargo_command_with_flags, handle_metadata_message};
 use crate::cli::cli_format_path;
 use crate::pgo::CargoCommand;
@@ -14,6 +15,10 @@ use crate::{clear_directory, run_command};
 #[derive(clap::Parser, Debug)]
 #[clap(trailing_var_arg(true))]
 pub struct BoltInstrumentArgs {
+    /// Instrument a PGO-optimized binary. To use this, you must already have PGO profiles on disk.
+    /// Later also pass the same flag to `cargo pgo bolt optimize`.
+    #[clap(long)]
+    with_pgo: bool,
     /// Additional arguments that will be passed to `cargo build`.
     cargo_args: Vec<String>,
 }
@@ -25,7 +30,7 @@ pub fn bolt_instrument(args: BoltInstrumentArgs) -> anyhow::Result<()> {
 
     let bolt_env = find_bolt_env()?;
 
-    log::info!("Profile directory will be cleared.");
+    log::info!("BOLT profile directory will be cleared.");
     clear_directory(&bolt_dir)?;
 
     log::info!(
@@ -33,7 +38,8 @@ pub fn bolt_instrument(args: BoltInstrumentArgs) -> anyhow::Result<()> {
         cli_format_path(bolt_dir.display())
     );
 
-    let output = cargo_command_with_flags(CargoCommand::Build, bolt_rustflags(), args.cargo_args)?;
+    let flags = bolt_pgo_rustflags(&workspace, args.with_pgo)?;
+    let output = cargo_command_with_flags(CargoCommand::Build, &flags, args.cargo_args)?;
 
     for message in Message::parse_stream(output.stdout.as_slice()) {
         let message = message?;
