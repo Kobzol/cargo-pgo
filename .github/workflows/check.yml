@@ -53,3 +53,36 @@ jobs:
         with:
           command: fmt
           args: --all -- --check
+  test-windows:
+    name: Test on Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.56.1
+          override: true
+          components: llvm-tools-preview
+
+      - uses: Swatinem/rust-cache@v1
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --all --all-targets
+
+      - name: Run unit tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --lib
+
+      - name: Run integration tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
