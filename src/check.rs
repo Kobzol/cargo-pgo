@@ -1,9 +1,9 @@
 use crate::bolt::env::{find_llvm_bolt, find_merge_fdata};
 use crate::bolt::llvm_bolt_install_hint;
 use crate::cli::cli_format_path;
+use crate::get_rustc_version;
 use crate::pgo::env::find_pgo_env;
 use crate::pgo::llvm_profdata_install_hint;
-use crate::workspace::get_cargo_workspace;
 use anyhow::anyhow;
 use colored::Colorize;
 use std::path::PathBuf;
@@ -87,11 +87,4 @@ fn check_bolt_env() -> bool {
     let llvm_bolt = check_binary_available("llvm-bolt", find_llvm_bolt(), hint);
     let merge_fdata = check_binary_available("merge-fdata", find_merge_fdata(), hint);
     llvm_bolt && merge_fdata
-}
-
-fn get_rustc_version() -> anyhow::Result<semver::Version> {
-    let config = cargo::Config::default()?;
-    let workspace = get_cargo_workspace(&config)?;
-    let rustc = workspace.config().load_global_rustc(Some(&workspace))?;
-    Ok(rustc.version)
 }

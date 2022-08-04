@@ -2,6 +2,7 @@ use cargo_pgo::bolt::instrument::{bolt_instrument, BoltInstrumentArgs};
 use cargo_pgo::bolt::optimize::{bolt_optimize, BoltOptimizeArgs};
 use cargo_pgo::check::environment_info;
 use cargo_pgo::clean::clean_artifacts;
+use cargo_pgo::get_cargo_ctx;
 use cargo_pgo::pgo::instrument::{pgo_instrument_command, PgoInstrumentArgs};
 use cargo_pgo::pgo::optimize::{pgo_optimize, PgoOptimizeArgs};
 use cargo_pgo::pgo::CargoCommand;
@@ -53,16 +54,18 @@ enum BoltArgs {
 fn run() -> anyhow::Result<()> {
     let args = Args::parse();
 
+    let ctx = get_cargo_ctx()?;
+
     let Args::Pgo(args) = args;
     match args {
         Subcommand::Info => environment_info(),
-        Subcommand::Build(args) => pgo_instrument_command(args, CargoCommand::Build),
-        Subcommand::Test(args) => pgo_instrument_command(args, CargoCommand::Test),
-        Subcommand::Run(args) => pgo_instrument_command(args, CargoCommand::Run),
-        Subcommand::Optimize(args) => pgo_optimize(args),
-        Subcommand::Bolt(BoltArgs::Build(args)) => bolt_instrument(args),
-        Subcommand::Bolt(BoltArgs::Optimize(args)) => bolt_optimize(args),
-        Subcommand::Clean => clean_artifacts(),
+        Subcommand::Build(args) => pgo_instrument_command(ctx, args, CargoCommand::Build),
+        Subcommand::Test(args) => pgo_instrument_command(ctx, args, CargoCommand::Test),
+        Subcommand::Run(args) => pgo_instrument_command(ctx, args, CargoCommand::Run),
+        Subcommand::Optimize(args) => pgo_optimize(ctx, args),
+        Subcommand::Bolt(BoltArgs::Build(args)) => bolt_instrument(ctx, args),
+        Subcommand::Bolt(BoltArgs::Optimize(args)) => bolt_optimize(ctx, args),
+        Subcommand::Clean => clean_artifacts(ctx),
     }
 }
 

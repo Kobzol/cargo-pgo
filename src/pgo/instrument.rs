@@ -2,7 +2,7 @@ use crate::build::{cargo_command_with_flags, handle_metadata_message};
 use crate::clear_directory;
 use crate::cli::cli_format_path;
 use crate::pgo::CargoCommand;
-use crate::workspace::{get_cargo_workspace, get_pgo_directory};
+use crate::workspace::CargoContext;
 use cargo_metadata::Message;
 use colored::Colorize;
 
@@ -14,12 +14,11 @@ pub struct PgoInstrumentArgs {
 }
 
 pub fn pgo_instrument_command(
+    ctx: CargoContext,
     args: PgoInstrumentArgs,
     command: CargoCommand,
 ) -> anyhow::Result<()> {
-    let config = cargo::Config::default()?;
-    let workspace = get_cargo_workspace(&config)?;
-    let pgo_dir = get_pgo_directory(&workspace)?;
+    let pgo_dir = ctx.get_pgo_directory()?;
 
     log::info!("PGO profile directory will be cleared.");
     clear_directory(&pgo_dir)?;

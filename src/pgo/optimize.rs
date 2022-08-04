@@ -17,7 +17,7 @@ use crate::cli::cli_format_path;
 use crate::pgo::env::{find_pgo_env, PgoEnv};
 use crate::pgo::{llvm_profdata_install_hint, CargoCommand};
 use crate::utils::str::pluralize;
-use crate::workspace::{get_cargo_workspace, get_pgo_directory};
+use crate::workspace::CargoContext;
 
 #[derive(clap::Parser, Debug)]
 #[clap(trailing_var_arg(true))]
@@ -38,10 +38,8 @@ pub fn prepare_pgo_optimization_flags(pgo_env: &PgoEnv, pgo_dir: &Path) -> anyho
     ))
 }
 
-pub fn pgo_optimize(args: PgoOptimizeArgs) -> anyhow::Result<()> {
-    let config = cargo::Config::default()?;
-    let workspace = get_cargo_workspace(&config)?;
-    let pgo_dir = get_pgo_directory(&workspace)?;
+pub fn pgo_optimize(ctx: CargoContext, args: PgoOptimizeArgs) -> anyhow::Result<()> {
+    let pgo_dir = ctx.get_pgo_directory()?;
     let pgo_env = get_pgo_env()?;
 
     let flags = prepare_pgo_optimization_flags(&pgo_env, &pgo_dir)?;

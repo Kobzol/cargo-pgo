@@ -15,7 +15,7 @@ use crate::build::{cargo_command_with_flags, handle_metadata_message};
 use crate::cli::cli_format_path;
 use crate::pgo::CargoCommand;
 use crate::run_command;
-use crate::workspace::{get_bolt_directory, get_cargo_workspace};
+use crate::workspace::CargoContext;
 
 #[derive(clap::Parser, Debug)]
 #[clap(trailing_var_arg(true))]
@@ -28,13 +28,11 @@ pub struct BoltOptimizeArgs {
     cargo_args: Vec<String>,
 }
 
-pub fn bolt_optimize(args: BoltOptimizeArgs) -> anyhow::Result<()> {
-    let config = cargo::Config::default()?;
-    let workspace = get_cargo_workspace(&config)?;
-    let bolt_dir = get_bolt_directory(&workspace)?;
+pub fn bolt_optimize(ctx: CargoContext, args: BoltOptimizeArgs) -> anyhow::Result<()> {
+    let bolt_dir = ctx.get_bolt_directory()?;
     let bolt_env = find_bolt_env()?;
 
-    let flags = bolt_pgo_rustflags(&workspace, args.with_pgo)?;
+    let flags = bolt_pgo_rustflags(&ctx, args.with_pgo)?;
     let output = cargo_command_with_flags(CargoCommand::Build, &flags, args.cargo_args)?;
 
     for message in Message::parse_stream(output.stdout.as_slice()) {

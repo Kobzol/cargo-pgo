@@ -1,6 +1,5 @@
 use crate::pgo::optimize::{get_pgo_env, prepare_pgo_optimization_flags};
-use crate::workspace::get_pgo_directory;
-use cargo::core::Workspace;
+use crate::workspace::CargoContext;
 use cargo_metadata::Artifact;
 use std::path::{Path, PathBuf};
 
@@ -16,11 +15,11 @@ fn bolt_common_rustflags() -> &'static str {
     "-C link-args=-Wl,-q"
 }
 
-fn bolt_pgo_rustflags(workspace: &Workspace, with_pgo: bool) -> anyhow::Result<String> {
+fn bolt_pgo_rustflags(ctx: &CargoContext, with_pgo: bool) -> anyhow::Result<String> {
     let flags = match with_pgo {
         true => {
             let pgo_env = get_pgo_env()?;
-            let pgo_dir = get_pgo_directory(workspace)?;
+            let pgo_dir = ctx.get_pgo_directory()?;
             let flags = prepare_pgo_optimization_flags(&pgo_env, &pgo_dir)?;
             format!("{} {}", flags, bolt_common_rustflags())
         }
