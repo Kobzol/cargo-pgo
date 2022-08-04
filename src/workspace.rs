@@ -1,32 +1,32 @@
-use cargo::core::Workspace;
-use cargo::util::important_paths::find_root_manifest_for_wd;
 use std::path::{Path, PathBuf};
 
-/// Finds the root `Cargo.toml` file.
-fn get_root_manifest() -> anyhow::Result<PathBuf> {
-    let manifest = find_root_manifest_for_wd(&std::env::current_dir()?)
-        .map_err(|error| anyhow::anyhow!("Cannot find root `Cargo.toml`: {:?}", error))?;
-    Ok(manifest)
+pub struct CargoContext {
+    target_directory: PathBuf,
 }
 
-/// Find the Cargo workspace from the current working directory.
-pub fn get_cargo_workspace(config: &cargo::Config) -> anyhow::Result<Workspace> {
-    let manifest = get_root_manifest()?;
-    let workspace = Workspace::new(&manifest, config)?;
-    Ok(workspace)
+impl CargoContext {
+    pub fn get_pgo_directory(&self) -> anyhow::Result<PathBuf> {
+        self.get_target_directory(Path::new("pgo-profiles"))
+    }
+
+    pub fn get_bolt_directory(&self) -> anyhow::Result<PathBuf> {
+        self.get_target_directory(Path::new("bolt-profiles"))
+    }
+
+    fn get_target_directory(&self, path: &Path) -> anyhow::Result<PathBuf> {
+        let directory = self.target_directory.join(path);
+        std::fs::create_dir_all(&directory)?;
+        Ok(directory)
+    }
 }
 
-pub fn get_pgo_directory(workspace: &Workspace) -> anyhow::Result<PathBuf> {
-    get_workspace_directory(workspace, Path::new("pgo-profiles"))
-}
-
-pub fn get_bolt_directory(workspace: &Workspace) -> anyhow::Result<PathBuf> {
-    get_workspace_directory(workspace, Path::new("bolt-profiles"))
-}
-
-fn get_workspace_directory(workspace: &Workspace, path: &Path) -> anyhow::Result<PathBuf> {
-    let target_dir = workspace.target_dir();
-    let pgo_dir = target_dir.join(path);
-    pgo_dir.create_dir()?;
-    Ok(pgo_dir.into_path_unlocked())
+/// Finds Cargo metadata from the current directory.
+pub fn get_cargo_ctx() -> anyhow::Result<CargoContext> {
+    let cmd = cargo_metadata::MetadataCommand::new();
+    let metadata = cmd
+        .exec()
+        .map_err(|error| anyhow::anyhow!("Cannot get cargo metadata: {:?}", error))?;
+    Ok(CargoContext {
+        target_directory: metadata.target_directory.into_std_path_buf(),
+    })
 }

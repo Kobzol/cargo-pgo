@@ -25,7 +25,6 @@ include = [
 ]
 
 [dependencies]
-cargo = "0.60.0"
 anyhow = "1"
 which = "4.2"
 clap = { version = "3.2", features = ["derive"] }

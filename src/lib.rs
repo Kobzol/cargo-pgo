@@ -17,7 +17,9 @@ use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus};
 
-pub fn resolve_binary(path: &Path) -> anyhow::Result<PathBuf> {
+pub use workspace::get_cargo_ctx;
+
+pub(crate) fn resolve_binary(path: &Path) -> anyhow::Result<PathBuf> {
     Ok(which::which(path)?)
 }
 
@@ -62,23 +64,31 @@ fn run_command<S: AsRef<OsStr>>(program: S, args: &[&str]) -> anyhow::Result<Utf
 
 /// Tries to find the default target triple used for compiling on the current host computer.
 pub fn get_default_target() -> anyhow::Result<String> {
-    const HOST_FIELD: &str = "host: ";
+    get_rustc_info("host: ")
+}
 
+pub fn get_rustc_version() -> anyhow::Result<semver::Version> {
+    let version = get_rustc_info("release: ")?;
+    let version = semver::Version::parse(&version)?;
+    Ok(version)
+}
+
+fn get_rustc_info(field: &str) -> anyhow::Result<String> {
     // Query rustc for defaults.
     let output = run_command("rustc", &["-vV"])?;
 
-    // Parse the default target from stdout.
+    // Parse the field from stdout.
     let host = output
         .stdout
         .lines()
-        .find(|l| l.starts_with(HOST_FIELD))
-        .map(|l| &l[HOST_FIELD.len()..])
-        .ok_or_else(|| anyhow!("Failed to parse target from rustc output."))?
+        .find(|l| l.starts_with(field))
+        .map(|l| l[field.len()..].trim())
+        .ok_or_else(|| anyhow!("Failed to parse field {} from rustc output.", field))?
         .to_owned();
     Ok(host)
 }
 
-/// Clears all files from the directory, if it exists.
+/// Clears all files from the directory, and recreates it.
 fn clear_directory(path: &Path) -> std::io::Result<()> {
     std::fs::remove_dir_all(path)?;
     std::fs::create_dir_all(path)
