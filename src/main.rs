@@ -38,6 +38,9 @@ enum Subcommand {
     /// Execute `cargo run` to produce PGO profiles from binary execution, which can be later used
     /// in the `optimize` step.
     Run(PgoInstrumentShortcutArgs),
+    /// Execute `cargo bench` to produce PGO profiles from benchmark execution, which can be later
+    /// used in the `optimize` step.
+    Bench(PgoInstrumentShortcutArgs),
     /// Build an optimized version of a binary using generated PGO profiles.
     Optimize(PgoOptimizeArgs),
     /// Optimization using BOLT.
@@ -67,6 +70,7 @@ fn run() -> anyhow::Result<()> {
         Subcommand::Build(args) => pgo_instrument(ctx, args.into_full_args(CargoCommand::Build)),
         Subcommand::Test(args) => pgo_instrument(ctx, args.into_full_args(CargoCommand::Test)),
         Subcommand::Run(args) => pgo_instrument(ctx, args.into_full_args(CargoCommand::Run)),
+        Subcommand::Bench(args) => pgo_instrument(ctx, args.into_full_args(CargoCommand::Bench)),
         Subcommand::Optimize(args) => pgo_optimize(ctx, args),
         Subcommand::Bolt(BoltArgs::Build(args)) => bolt_instrument(ctx, args),
         Subcommand::Bolt(BoltArgs::Optimize(args)) => bolt_optimize(ctx, args),
