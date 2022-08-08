@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use std::path::{Path, PathBuf};
 
 use cargo_metadata::camino::Utf8PathBuf;
@@ -48,16 +49,8 @@ pub fn bolt_instrument(ctx: CargoContext, args: BoltInstrumentArgs) -> anyhow::R
                         "Binary {} built successfully. It will be now instrumented with BOLT.",
                         artifact.target.name.blue(),
                     );
-                    let instrumented_path = instrument_binary(
-                        &bolt_env, executable, &bolt_dir, &artifact,
-                    )
-                    .map_err(|error| {
-                        anyhow::anyhow!(
-                            "Cannot instrument binary {} with BOLT: {:?}.",
-                            artifact.target.name,
-                            error
-                        )
-                    })?;
+                    let instrumented_path =
+                        instrument_binary(&bolt_env, executable, &bolt_dir, &artifact)?;
                     log::info!(
                         "Binary {} instrumented successfully. Now run {} on your workload.",
                         artifact.target.name.blue(),
@@ -105,7 +98,7 @@ fn instrument_binary(
 
     let profile_path = profile_dir.join("profile");
 
-    run_command(
+    let output = run_command(
         &bolt_env.bolt,
         &[
             "-instrument",
@@ -119,7 +112,12 @@ fn instrument_binary(
             "-o",
             target_path.as_str(),
         ],
-    )?;
+    )?
+    .ok()
+    .map_err(|error| anyhow!("Cannot instrument binary with BOLT: {}.", error))?;
+
+    log::debug!("BOLT instrumentation stdout\n{}\n\n", output.stdout);
+    log::debug!("BOLT instrumentation stderr\n{}", output.stderr);
 
     Ok(target_path.into_std_path_buf())
 }

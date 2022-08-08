@@ -36,9 +36,10 @@ impl Utf8Output {
             Ok(self)
         } else {
             Err(anyhow::anyhow!(
-                "Command ended with exit code {}\n{}",
+                "Command ended with {}\nStderr\n{}\nStdout\n{}",
                 self.status,
-                self.stderr
+                self.stderr,
+                self.stdout
             ))
         }
     }

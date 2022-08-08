@@ -123,8 +123,8 @@ fn optimize_binary(
     .ok()
     .map_err(|error| anyhow!("Cannot optimize binary with BOLT: {}.", error))?;
 
-    log::debug!("BOLT stdout\n{}\n\n", output.stdout);
-    log::debug!("BOLT stderr\n{}", output.stderr);
+    log::debug!("BOLT optimization stdout\n{}\n\n", output.stdout);
+    log::debug!("BOLT optimization stderr\n{}", output.stderr);
 
     Ok(target_path.into_std_path_buf())
 }
