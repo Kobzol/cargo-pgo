@@ -12,6 +12,11 @@ struct CargoArgs {
     contains_target: bool,
 }
 
+enum ReleaseMode {
+    AddRelease,
+    NoRelease,
+}
+
 /// Run `cargo` command in release mode with the provided RUSTFLAGS and Cargo arguments.
 pub fn cargo_command_with_flags(
     command: CargoCommand,
@@ -24,7 +29,12 @@ pub fn cargo_command_with_flags(
     let mut env = HashMap::default();
     env.insert("RUSTFLAGS".to_string(), rustflags);
 
-    let output = cargo_command(command, cargo_args, env)?;
+    let release_mode = match command {
+        CargoCommand::Bench => ReleaseMode::NoRelease,
+        _ => ReleaseMode::AddRelease,
+    };
+
+    let output = cargo_command(command, cargo_args, env, release_mode)?;
     if !output.status.success() {
         Err(anyhow::anyhow!(
             "Cargo error ({})\n{}\n{}",
@@ -54,16 +64,23 @@ fn cargo_command(
     cargo_cmd: CargoCommand,
     cargo_args: Vec<String>,
     env: HashMap<String, String>,
+    release_mode: ReleaseMode,
 ) -> anyhow::Result<Output> {
     let parsed_args = parse_cargo_args(cargo_args);
 
     let mut command = Command::new("cargo");
     command.args(&[
         cargo_cmd.to_str(),
-        "--release",
         "--message-format",
         "json-diagnostic-rendered-ansi",
     ]);
+
+    match release_mode {
+        ReleaseMode::AddRelease => {
+            command.arg("--release");
+        }
+        ReleaseMode::NoRelease => {}
+    }
 
     // --target is passed to avoid instrumenting build scripts
     // See https://doc.rust-lang.org/rustc/profile-guided-optimization.html#a-complete-cargo-workflow
@@ -199,6 +216,7 @@ pub enum CargoCommand {
     Build,
     Test,
     Run,
+    Bench,
 }
 
 impl CargoCommand {
@@ -207,6 +225,7 @@ impl CargoCommand {
             CargoCommand::Build => "build",
             CargoCommand::Test => "test",
             CargoCommand::Run => "run",
+            CargoCommand::Bench => "bench",
         }
     }
 }

@@ -91,6 +91,16 @@ fn test_run_optimize() -> anyhow::Result<()> {
 }
 
 #[test]
+fn test_bench_optimize() -> anyhow::Result<()> {
+    let project = init_cargo_project()?;
+    project.run(&["bench"])?.assert_ok();
+    project.run(&["optimize"])?.assert_ok();
+    run_command(&project.main_binary())?;
+
+    Ok(())
+}
+
+#[test]
 fn test_instrument_optimize() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
 
@@ -154,6 +164,16 @@ mod tests {
 fn test_instrument_run() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
     project.run(&["instrument", "run"])?.assert_ok();
+    project.run(&["optimize"])?.assert_ok();
+    run_command(&project.main_binary())?;
+
+    Ok(())
+}
+
+#[test]
+fn test_instrument_bench() -> anyhow::Result<()> {
+    let project = init_cargo_project()?;
+    project.run(&["instrument", "bench"])?.assert_ok();
     project.run(&["optimize"])?.assert_ok();
     run_command(&project.main_binary())?;
 
