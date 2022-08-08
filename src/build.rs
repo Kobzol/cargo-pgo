@@ -3,7 +3,8 @@ use crate::pgo::CargoCommand;
 use cargo_metadata::Message;
 use colored::Colorize;
 use std::collections::HashMap;
-use std::fmt::Write;
+use std::fmt::Write as WriteFmt;
+use std::io::Write;
 use std::process::{Command, Output};
 
 #[derive(Debug, Default)]
@@ -27,13 +28,26 @@ pub fn cargo_command_with_flags(
     let output = cargo_command(command, cargo_args, env)?;
     if !output.status.success() {
         Err(anyhow::anyhow!(
-            "Cargo error ({}): {}",
+            "Cargo error ({})\n{}\n{}",
             output.status,
-            String::from_utf8_lossy(&output.stderr).red()
+            String::from_utf8_lossy(&output.stderr).red(),
+            cargo_json_output_to_string(&output.stdout)
+                .unwrap_or_else(|error| format!("Could not parse Cargo stdout: {}", error))
         ))
     } else {
         Ok(output)
     }
+}
+
+fn cargo_json_output_to_string(output: &[u8]) -> anyhow::Result<String> {
+    let mut messages = Vec::new();
+
+    for message in Message::parse_stream(output) {
+        let message = message?;
+        write_metadata_message(&mut messages, message);
+    }
+
+    Ok(String::from_utf8(messages)?)
 }
 
 /// Run `cargo` command in release mode with the provided env variables and Cargo arguments.
@@ -100,17 +114,23 @@ fn parse_cargo_args(cargo_args: Vec<String>) -> CargoArgs {
 }
 
 pub fn handle_metadata_message(message: Message) {
+    write_metadata_message(std::io::stdout().lock(), message);
+}
+
+fn write_metadata_message<W: Write>(mut stream: W, message: Message) {
     match message {
         Message::TextLine(line) => {
             log::debug!("TextLine {}", line);
-            println!("{}", line)
+            write!(stream, "{}", line).unwrap();
         }
         Message::CompilerMessage(message) => {
             log::debug!("CompilerMessage {}", message);
-            print!(
+            write!(
+                stream,
                 "{}",
                 message.message.rendered.unwrap_or(message.message.message)
             )
+            .unwrap();
         }
         _ => {}
     }
