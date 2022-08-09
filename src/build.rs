@@ -121,7 +121,7 @@ fn write_metadata_message<W: Write>(mut stream: W, message: Message) {
     match message {
         Message::TextLine(line) => {
             log::debug!("TextLine {}", line);
-            write!(stream, "{}", line).unwrap();
+            writeln!(stream, "{}", line).unwrap();
         }
         Message::CompilerMessage(message) => {
             log::debug!("CompilerMessage {}", message);
