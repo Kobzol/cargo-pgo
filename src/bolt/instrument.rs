@@ -8,9 +8,10 @@ use colored::Colorize;
 use crate::bolt::cli::{add_bolt_args, BoltArgs};
 use crate::bolt::env::{find_bolt_env, BoltEnv};
 use crate::bolt::{bolt_pgo_rustflags, get_binary_profile_dir};
-use crate::build::{cargo_command_with_flags, handle_metadata_message};
+use crate::build::{cargo_command_with_flags, get_artifact_kind, handle_metadata_message};
 use crate::cli::cli_format_path;
 use crate::pgo::CargoCommand;
+use crate::utils::str::capitalize;
 use crate::workspace::CargoContext;
 use crate::{clear_directory, run_command};
 
@@ -49,7 +50,8 @@ pub fn bolt_instrument(ctx: CargoContext, args: BoltInstrumentArgs) -> anyhow::R
             Message::CompilerArtifact(artifact) => {
                 if let Some(ref executable) = artifact.executable {
                     log::info!(
-                        "Binary {} built successfully. It will be now instrumented with BOLT.",
+                        "{} {} built successfully. It will be now instrumented with BOLT.",
+                        capitalize(get_artifact_kind(&artifact)).yellow(),
                         artifact.target.name.blue(),
                     );
                     let instrumented_path = instrument_binary(
@@ -60,7 +62,8 @@ pub fn bolt_instrument(ctx: CargoContext, args: BoltInstrumentArgs) -> anyhow::R
                         &artifact,
                     )?;
                     log::info!(
-                        "Binary {} instrumented successfully. Now run {} on your workload.",
+                        "{} {} instrumented successfully. Now run {} on your workload.",
+                        capitalize(get_artifact_kind(&artifact)).yellow(),
                         artifact.target.name.blue(),
                         cli_format_path(&instrumented_path.display())
                     );
