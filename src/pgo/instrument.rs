@@ -1,7 +1,7 @@
+use crate::build::CargoCommand;
 use crate::build::{cargo_command_with_flags, get_artifact_kind, handle_metadata_message};
 use crate::clear_directory;
 use crate::cli::cli_format_path;
-use crate::pgo::CargoCommand;
 use crate::workspace::CargoContext;
 use cargo_metadata::Message;
 use colored::Colorize;
@@ -9,15 +9,32 @@ use colored::Colorize;
 #[derive(clap::Parser, Debug)]
 #[clap(trailing_var_arg(true))]
 pub struct PgoInstrumentArgs {
+    /// Cargo command that will be used for PGO-instrumented compilation.
+    #[clap(value_enum, default_value = "build")]
+    command: CargoCommand,
     /// Additional arguments that will be passed to the executed `cargo` command.
     cargo_args: Vec<String>,
 }
 
-pub fn pgo_instrument_command(
-    ctx: CargoContext,
-    args: PgoInstrumentArgs,
-    command: CargoCommand,
-) -> anyhow::Result<()> {
+#[derive(clap::Parser, Debug)]
+#[clap(trailing_var_arg(true))]
+pub struct PgoInstrumentShortcutArgs {
+    /// Additional arguments that will be passed to the executed `cargo` command.
+    cargo_args: Vec<String>,
+}
+
+impl PgoInstrumentShortcutArgs {
+    pub fn into_full_args(self, command: CargoCommand) -> PgoInstrumentArgs {
+        let PgoInstrumentShortcutArgs { cargo_args } = self;
+
+        PgoInstrumentArgs {
+            command,
+            cargo_args,
+        }
+    }
+}
+
+pub fn pgo_instrument(ctx: CargoContext, args: PgoInstrumentArgs) -> anyhow::Result<()> {
     let pgo_dir = ctx.get_pgo_directory()?;
 
     log::info!("PGO profile directory will be cleared.");
@@ -29,7 +46,7 @@ pub fn pgo_instrument_command(
     );
 
     let flags = format!("-Cprofile-generate={}", pgo_dir.display());
-    let output = cargo_command_with_flags(command, &flags, args.cargo_args)?;
+    let output = cargo_command_with_flags(args.command, &flags, args.cargo_args)?;
     log::debug!("Cargo stderr\n {}", String::from_utf8_lossy(&output.stderr));
 
     for message in Message::parse_stream(output.stdout.as_slice()) {
@@ -37,7 +54,7 @@ pub fn pgo_instrument_command(
         match message {
             Message::CompilerArtifact(artifact) => {
                 if let Some(ref executable) = artifact.executable {
-                    if let CargoCommand::Build = command {
+                    if let CargoCommand::Build = args.command {
                         log::info!(
                             "PGO-instrumented {} {} built successfully.",
                             get_artifact_kind(&artifact).yellow(),

@@ -12,16 +12,21 @@ use once_cell::sync::OnceCell;
 use regex::Regex;
 use rustc_demangle::{demangle, Demangle};
 
-use crate::build::{cargo_command_with_flags, get_artifact_kind, handle_metadata_message};
+use crate::build::{
+    cargo_command_with_flags, get_artifact_kind, handle_metadata_message, CargoCommand,
+};
 use crate::cli::cli_format_path;
 use crate::pgo::env::{find_pgo_env, PgoEnv};
-use crate::pgo::{llvm_profdata_install_hint, CargoCommand};
+use crate::pgo::llvm_profdata_install_hint;
 use crate::utils::str::pluralize;
 use crate::workspace::CargoContext;
 
 #[derive(clap::Parser, Debug)]
 #[clap(trailing_var_arg(true))]
 pub struct PgoOptimizeArgs {
+    /// Cargo command that will be used for PGO-optimized compilation.
+    #[clap(value_enum, default_value = "build")]
+    command: CargoCommand,
     cargo_args: Vec<String>,
 }
 
@@ -44,7 +49,7 @@ pub fn pgo_optimize(ctx: CargoContext, args: PgoOptimizeArgs) -> anyhow::Result<
 
     let flags = prepare_pgo_optimization_flags(&pgo_env, &pgo_dir)?;
 
-    let output = cargo_command_with_flags(CargoCommand::Build, &flags, args.cargo_args)?;
+    let output = cargo_command_with_flags(args.command, &flags, args.cargo_args)?;
     log::debug!("Cargo stderr\n {}", String::from_utf8_lossy(&output.stderr));
 
     let mut counter = MissingProfileCounter::default();
@@ -52,12 +57,14 @@ pub fn pgo_optimize(ctx: CargoContext, args: PgoOptimizeArgs) -> anyhow::Result<
         let message = message?;
         match message {
             Message::CompilerArtifact(artifact) => {
-                if artifact.executable.is_some() {
-                    log::info!(
-                        "PGO-optimized {} {} built successfully.",
-                        get_artifact_kind(&artifact).yellow(),
-                        artifact.target.name.blue()
-                    );
+                if let CargoCommand::Build = args.command {
+                    if artifact.executable.is_some() {
+                        log::info!(
+                            "PGO-optimized {} {} built successfully.",
+                            get_artifact_kind(&artifact).yellow(),
+                            artifact.target.name.blue()
+                        );
+                    }
                 }
             }
             Message::BuildFinished(res) => {
