@@ -1,5 +1,4 @@
 use crate::get_default_target;
-use crate::pgo::CargoCommand;
 use cargo_metadata::{Artifact, Message};
 use colored::Colorize;
 use std::collections::HashMap;
@@ -192,5 +191,22 @@ mod tests {
             vec!["--target".to_string(), "x64".to_string(), "bar".to_string()]
         );
         assert!(args.contains_target);
+    }
+}
+
+#[derive(Debug, Copy, Clone, clap::ValueEnum)]
+pub enum CargoCommand {
+    Build,
+    Test,
+    Run,
+}
+
+impl CargoCommand {
+    pub fn to_str(&self) -> &str {
+        match self {
+            CargoCommand::Build => "build",
+            CargoCommand::Test => "test",
+            CargoCommand::Run => "run",
+        }
     }
 }

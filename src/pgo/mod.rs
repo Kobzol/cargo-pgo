@@ -11,20 +11,3 @@ add its `bin` directory to PATH.",
         "rustup component add llvm-tools-preview".blue()
     )
 }
-
-#[derive(Debug, Copy, Clone)]
-pub enum CargoCommand {
-    Build,
-    Test,
-    Run,
-}
-
-impl CargoCommand {
-    pub fn to_str(&self) -> &str {
-        match self {
-            CargoCommand::Build => "build",
-            CargoCommand::Test => "test",
-            CargoCommand::Run => "run",
-        }
-    }
-}

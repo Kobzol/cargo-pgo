@@ -4,7 +4,7 @@
 //! You can find a usage guide for `cargo-pgo` at its [repository](https://github.com/kobzol/cargo-pgo).
 
 pub mod bolt;
-mod build;
+pub mod build;
 pub mod check;
 pub mod clean;
 pub(crate) mod cli;

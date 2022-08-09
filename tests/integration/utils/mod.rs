@@ -76,7 +76,8 @@ impl Drop for CargoProject {
     fn drop(&mut self) {
         if std::thread::panicking() {
             // Do not delete the directory if an error has occurred
-            std::mem::replace(&mut self._tempdir, TempDir::new().unwrap()).into_path();
+            let path = std::mem::replace(&mut self._tempdir, TempDir::new().unwrap()).into_path();
+            eprintln!("Directory of failed test located at: {}", path.display());
         }
     }
 }
