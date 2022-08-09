@@ -1,4 +1,4 @@
-use crate::build::{cargo_command_with_flags, handle_metadata_message};
+use crate::build::{cargo_command_with_flags, get_artifact_kind, handle_metadata_message};
 use crate::clear_directory;
 use crate::cli::cli_format_path;
 use crate::pgo::CargoCommand;
@@ -36,10 +36,11 @@ pub fn pgo_instrument_command(
         let message = message?;
         match message {
             Message::CompilerArtifact(artifact) => {
-                if let Some(executable) = artifact.executable {
+                if let Some(ref executable) = artifact.executable {
                     if let CargoCommand::Build = command {
                         log::info!(
-                            "PGO-instrumented binary {} built successfully.",
+                            "PGO-instrumented {} {} built successfully.",
+                            get_artifact_kind(&artifact).yellow(),
                             artifact.target.name.blue()
                         );
                         log::info!(

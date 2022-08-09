@@ -12,7 +12,7 @@ use once_cell::sync::OnceCell;
 use regex::Regex;
 use rustc_demangle::{demangle, Demangle};
 
-use crate::build::{cargo_command_with_flags, handle_metadata_message};
+use crate::build::{cargo_command_with_flags, get_artifact_kind, handle_metadata_message};
 use crate::cli::cli_format_path;
 use crate::pgo::env::{find_pgo_env, PgoEnv};
 use crate::pgo::{llvm_profdata_install_hint, CargoCommand};
@@ -54,7 +54,8 @@ pub fn pgo_optimize(ctx: CargoContext, args: PgoOptimizeArgs) -> anyhow::Result<
             Message::CompilerArtifact(artifact) => {
                 if artifact.executable.is_some() {
                     log::info!(
-                        "PGO-optimized binary {} built successfully.",
+                        "PGO-optimized {} {} built successfully.",
+                        get_artifact_kind(&artifact).yellow(),
                         artifact.target.name.blue()
                     );
                 }

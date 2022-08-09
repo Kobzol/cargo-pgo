@@ -1,6 +1,6 @@
 use crate::get_default_target;
 use crate::pgo::CargoCommand;
-use cargo_metadata::Message;
+use cargo_metadata::{Artifact, Message};
 use colored::Colorize;
 use std::collections::HashMap;
 use std::fmt::Write as WriteFmt;
@@ -134,6 +134,25 @@ fn write_metadata_message<W: Write>(mut stream: W, message: Message) {
         }
         _ => {}
     }
+}
+
+/// Returns a user-friendly name of an artifact kind.
+pub fn get_artifact_kind(artifact: &Artifact) -> &str {
+    for kind in &artifact.target.kind {
+        match kind.as_str() {
+            "bin" => {
+                return "binary";
+            }
+            "bench" => {
+                return "benchmark";
+            }
+            "example" => {
+                return "example";
+            }
+            _ => {}
+        }
+    }
+    "artifact"
 }
 
 #[cfg(test)]

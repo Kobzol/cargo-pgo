@@ -12,10 +12,11 @@ use walkdir::WalkDir;
 use crate::bolt::cli::{add_bolt_args, BoltArgs};
 use crate::bolt::env::{find_bolt_env, BoltEnv};
 use crate::bolt::{bolt_pgo_rustflags, get_binary_profile_dir};
-use crate::build::{cargo_command_with_flags, handle_metadata_message};
+use crate::build::{cargo_command_with_flags, get_artifact_kind, handle_metadata_message};
 use crate::cli::cli_format_path;
 use crate::pgo::CargoCommand;
 use crate::run_command;
+use crate::utils::str::capitalize;
 use crate::workspace::CargoContext;
 
 #[derive(clap::Parser, Debug)]
@@ -44,7 +45,8 @@ pub fn bolt_optimize(ctx: CargoContext, args: BoltOptimizeArgs) -> anyhow::Resul
             Message::CompilerArtifact(artifact) => {
                 if let Some(ref executable) = artifact.executable {
                     log::info!(
-                        "Binary {} built successfully. It will be now optimized with BOLT.",
+                        "{} {} built successfully. It will be now optimized with BOLT.",
+                        capitalize(get_artifact_kind(&artifact)).yellow(),
                         artifact.target.name.blue()
                     );
 
@@ -59,7 +61,8 @@ pub fn bolt_optimize(ctx: CargoContext, args: BoltOptimizeArgs) -> anyhow::Resul
                         let optimized_path =
                             optimize_binary(&bolt_env, &args.bolt_args, executable, &target_file)?;
                         log::info!(
-                            "Binary {} successfully optimized with BOLT. You can find it at {}.",
+                            "{} {} successfully optimized with BOLT. You can find it at {}.",
+                            capitalize(get_artifact_kind(&artifact)).yellow(),
                             artifact.target.name.blue(),
                             cli_format_path(&optimized_path.display())
                         );
