@@ -9,6 +9,7 @@ use cargo_metadata::Message;
 use colored::Colorize;
 use walkdir::WalkDir;
 
+use crate::bolt::cli::{add_bolt_args, BoltArgs};
 use crate::bolt::env::{find_bolt_env, BoltEnv};
 use crate::bolt::{bolt_pgo_rustflags, get_binary_profile_dir};
 use crate::build::{cargo_command_with_flags, handle_metadata_message};
@@ -24,6 +25,8 @@ pub struct BoltOptimizeArgs {
     /// Use this flag only if you have also used it for `cargo pgo bolt build`.
     #[clap(long)]
     with_pgo: bool,
+    #[clap(flatten)]
+    bolt_args: BoltArgs,
     /// Additional arguments that will be passed to `cargo build`.
     cargo_args: Vec<String>,
 }
@@ -53,7 +56,8 @@ pub fn bolt_optimize(ctx: CargoContext, args: BoltOptimizeArgs) -> anyhow::Resul
                             artifact.target.name.blue()
                         );
                     } else {
-                        let optimized_path = optimize_binary(&bolt_env, executable, &target_file)?;
+                        let optimized_path =
+                            optimize_binary(&bolt_env, &args.bolt_args, executable, &target_file)?;
                         log::info!(
                             "Binary {} successfully optimized with BOLT. You can find it at {}.",
                             artifact.target.name.blue(),
@@ -79,6 +83,7 @@ pub fn bolt_optimize(ctx: CargoContext, args: BoltOptimizeArgs) -> anyhow::Resul
 /// Optimizes `binary` with BOLT and returns a path to the optimized binary.
 fn optimize_binary(
     bolt_env: &BoltEnv,
+    bolt_args: &BoltArgs,
     binary: &Utf8PathBuf,
     profile: &Path,
 ) -> anyhow::Result<PathBuf> {
@@ -98,30 +103,43 @@ fn optimize_binary(
         .expect("Cannot get parent of compiled binary")
         .join(format!("{}-bolt-optimized", basename));
 
-    let output = run_command(
-        &bolt_env.bolt,
-        &[
-            binary.as_str(),
-            "-data",
-            profile.to_str().expect("Could not convert profile path"),
-            "-o",
-            target_path.as_str(),
-            "-reorder-blocks=ext-tsp",
-            "-reorder-functions=hfsort",
-            "-split-functions=2",
-            "-split-all-cold",
-            "-jump-tables=move",
-            "-use-gnu-stack",
-            "-split-eh",
-            "-lite=1",
-            "-icf=1",
-            "-relocs",
-            "-update-debug-sections",
-            "-dyno-stats",
-        ],
-    )?
-    .ok()
-    .map_err(|error| anyhow!("Cannot optimize binary with BOLT: {}.", error))?;
+    let mut args = vec![
+        binary.to_string(),
+        "-data".to_string(),
+        profile
+            .to_str()
+            .expect("Could not convert profile path")
+            .to_string(),
+        "-o".to_string(),
+        target_path.to_string(),
+    ];
+
+    match bolt_args.bolt_args {
+        Some(ref bolt_args) => add_bolt_args(&mut args, bolt_args)?,
+        None => {
+            args.extend(
+                [
+                    "-reorder-blocks=ext-tsp",
+                    "-reorder-functions=hfsort",
+                    "-split-functions=2",
+                    "-split-all-cold",
+                    "-jump-tables=move",
+                    "-use-gnu-stack",
+                    "-split-eh",
+                    "-lite=1",
+                    "-icf=1",
+                    "-relocs",
+                    "-update-debug-sections",
+                    "-dyno-stats",
+                ]
+                .map(|s| s.to_string()),
+            );
+        }
+    }
+
+    let output = run_command(&bolt_env.bolt, &args)?
+        .ok()
+        .map_err(|error| anyhow!("Cannot optimize binary with BOLT: {}.", error))?;
 
     log::debug!("BOLT optimization stdout\n{}\n\n", output.stdout);
     log::debug!("BOLT optimization stderr\n{}", output.stderr);

@@ -66,3 +66,83 @@ fn test_bolt_pgo_optimize() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+#[ignore]
+fn test_bolt_instrument_bolt_args_empty() -> anyhow::Result<()> {
+    let project = init_cargo_project()?;
+
+    project
+        .run(&["bolt", "build", "--bolt-args", ""])?
+        .assert_ok();
+
+    Ok(())
+}
+
+#[test]
+#[ignore]
+fn test_bolt_instrument_bolt_args_multiple() -> anyhow::Result<()> {
+    let project = init_cargo_project()?;
+
+    project
+        .run(&[
+            "bolt",
+            "build",
+            "--bolt-args",
+            "-update-debug-sections --instrument-calls",
+        ])?
+        .assert_ok();
+
+    Ok(())
+}
+
+#[test]
+#[ignore]
+fn test_bolt_instrument_bolt_args_invalid() -> anyhow::Result<()> {
+    let project = init_cargo_project()?;
+
+    project
+        .run(&["bolt", "build", "--bolt-args", "-foo"])?
+        .assert_error();
+
+    Ok(())
+}
+
+#[test]
+#[ignore]
+fn test_bolt_instrument_bolt_args_with_cargo_args() -> anyhow::Result<()> {
+    let project = init_cargo_project()?;
+
+    project
+        .run(&[
+            "bolt",
+            "build",
+            "--bolt-args",
+            "-update-debug-sections",
+            "--",
+            "--locked",
+        ])?
+        .assert_ok();
+
+    Ok(())
+}
+
+#[test]
+#[ignore]
+fn test_bolt_optimize_bolt_args() -> anyhow::Result<()> {
+    let project = init_cargo_project()?;
+
+    project.run(&["bolt", "build"])?.assert_ok();
+    run_command(&project.bolt_instrumented_binary())?;
+
+    project
+        .run(&[
+            "bolt",
+            "optimize",
+            "--bolt-args",
+            "-update-debug-sections --instrument-calls",
+        ])?
+        .assert_ok();
+
+    Ok(())
+}

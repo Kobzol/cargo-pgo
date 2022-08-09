@@ -5,6 +5,7 @@ use cargo_metadata::camino::Utf8PathBuf;
 use cargo_metadata::{Artifact, Message};
 use colored::Colorize;
 
+use crate::bolt::cli::{add_bolt_args, BoltArgs};
 use crate::bolt::env::{find_bolt_env, BoltEnv};
 use crate::bolt::{bolt_pgo_rustflags, get_binary_profile_dir};
 use crate::build::{cargo_command_with_flags, handle_metadata_message};
@@ -20,6 +21,8 @@ pub struct BoltInstrumentArgs {
     /// Later also pass the same flag to `cargo pgo bolt optimize`.
     #[clap(long)]
     with_pgo: bool,
+    #[clap(flatten)]
+    bolt_args: BoltArgs,
     /// Additional arguments that will be passed to `cargo build`.
     cargo_args: Vec<String>,
 }
@@ -49,8 +52,13 @@ pub fn bolt_instrument(ctx: CargoContext, args: BoltInstrumentArgs) -> anyhow::R
                         "Binary {} built successfully. It will be now instrumented with BOLT.",
                         artifact.target.name.blue(),
                     );
-                    let instrumented_path =
-                        instrument_binary(&bolt_env, executable, &bolt_dir, &artifact)?;
+                    let instrumented_path = instrument_binary(
+                        &bolt_env,
+                        &args.bolt_args,
+                        executable,
+                        &bolt_dir,
+                        &artifact,
+                    )?;
                     log::info!(
                         "Binary {} instrumented successfully. Now run {} on your workload.",
                         artifact.target.name.blue(),
@@ -79,6 +87,7 @@ pub fn bolt_instrument(ctx: CargoContext, args: BoltInstrumentArgs) -> anyhow::R
 /// If it succeeds, returns the path to the instrumented binary.
 fn instrument_binary(
     bolt_env: &BoltEnv,
+    bolt_args: &BoltArgs,
     path: &Utf8PathBuf,
     profile_dir: &Path,
     artifact: &Artifact,
@@ -98,23 +107,27 @@ fn instrument_binary(
 
     let profile_path = profile_dir.join("profile");
 
-    let output = run_command(
-        &bolt_env.bolt,
-        &[
-            "-instrument",
-            path.as_str(),
-            "--instrumentation-file-append-pid",
-            "--instrumentation-file",
-            profile_path
-                .to_str()
-                .expect("Cannot get BOLT instrumentation file path"),
-            "-update-debug-sections",
-            "-o",
-            target_path.as_str(),
-        ],
-    )?
-    .ok()
-    .map_err(|error| anyhow!("Cannot instrument binary with BOLT: {}.", error))?;
+    let mut args = vec![
+        "-instrument".to_string(),
+        path.to_string(),
+        "--instrumentation-file-append-pid".to_string(),
+        "--instrumentation-file".to_string(),
+        profile_path
+            .to_str()
+            .expect("Cannot get BOLT instrumentation file path")
+            .to_string(),
+        "-o".to_string(),
+        target_path.as_str().to_string(),
+    ];
+
+    match bolt_args.bolt_args {
+        Some(ref bolt_args) => add_bolt_args(&mut args, bolt_args)?,
+        None => args.push("-update-debug-sections".to_string()),
+    }
+
+    let output = run_command(&bolt_env.bolt, &args)?
+        .ok()
+        .map_err(|error| anyhow!("Cannot instrument binary with BOLT: {}.", error))?;
 
     log::debug!("BOLT instrumentation stdout\n{}\n\n", output.stdout);
     log::debug!("BOLT instrumentation stderr\n{}", output.stderr);

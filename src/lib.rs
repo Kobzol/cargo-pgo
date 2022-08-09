@@ -46,7 +46,10 @@ impl Utf8Output {
 }
 
 /// Runs a command with the provided arguments and returns its stdout and stderr.
-fn run_command<S: AsRef<OsStr>>(program: S, args: &[&str]) -> anyhow::Result<Utf8Output> {
+fn run_command<S: AsRef<OsStr>, Str: AsRef<OsStr>>(
+    program: S,
+    args: &[Str],
+) -> anyhow::Result<Utf8Output> {
     let mut cmd = Command::new(program);
     for arg in args {
         cmd.arg(arg);
