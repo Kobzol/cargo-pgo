@@ -3,6 +3,7 @@ use crate::workspace::CargoContext;
 use cargo_metadata::Artifact;
 use std::path::{Path, PathBuf};
 
+pub mod cli;
 pub(crate) mod env;
 pub mod instrument;
 pub mod optimize;
