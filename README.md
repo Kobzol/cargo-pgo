@@ -115,19 +115,20 @@ BOLT is not supported directly by `rustc`, so the instrumentation and optimizati
 directly applied to binaries built by `rustc`. Instead, `cargo-pgo` creates additional binaries that
 you have to use for gathering profiles and executing the optimized code.
 
-1) **Generate the profiles**
+### Generating the profiles
+First, you need to generate the BOLT profiles. To do that, execute the following command:
+```bash
+$ cargo pgo bolt build
+```
+The instrumented binary will be located at `<target-dir>/<target-triple>/release/<binary-name>-bolt-instrumented`.
+Execute it on several workloads to gather as much data as possible.
 
-   First, you need to generate the BOLT profiles. To do that, execute the following command:
-   ```bash
-   $ cargo pgo bolt build
-   ```
-   The instrumented binary will be located at `<target-dir>/<target-triple>/release/<binary-name>-bolt-instrumented`.
-   Execute it on several workloads to gather as much data as possible.
+Note that for BOLT, the profile gathering step is optional. You can also simply run the optimization
+step (see below) without any profiles, although it will probably not have a large effect.
 
-2) **Build an optimized binary**
-
-   Once you have generated some profiles, you can execute `cargo pgo bolt optimize` to build an
-   optimized version of your binary. The optimized binary will be named `<binary-name>-bolt-optimized`.
+### Building an optimized binary
+Once you have generated some profiles, you can execute `cargo pgo bolt optimize` to build an
+optimized version of your binary. The optimized binary will be named `<binary-name>-bolt-optimized`.
 
 ## BOLT + PGO
 Yes, BOLT and PGO can even be combined :) To do that, you should first generate PGO profiles and
