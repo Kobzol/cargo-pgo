@@ -51,22 +51,28 @@ pub fn bolt_optimize(ctx: CargoContext, args: BoltOptimizeArgs) -> anyhow::Resul
                     );
 
                     let profile_dir = get_binary_profile_dir(&bolt_dir, &artifact);
-                    let target_file = profile_dir.join("merged.profdata");
-                    if !merge_profiles(&bolt_env, &profile_dir, &target_file)? {
-                        log::warn!(
-                            "No profiles found for target {}. It will NOT be optimized!",
-                            artifact.target.name.blue()
-                        );
-                    } else {
-                        let optimized_path =
-                            optimize_binary(&bolt_env, &args.bolt_args, executable, &target_file)?;
-                        log::info!(
-                            "{} {} successfully optimized with BOLT. You can find it at {}.",
-                            capitalize(get_artifact_kind(&artifact)).yellow(),
-                            artifact.target.name.blue(),
-                            cli_format_path(&optimized_path.display())
-                        );
-                    }
+                    let optimized_path = match merge_profiles(&bolt_env, &profile_dir)? {
+                        Some(profile_file) => optimize_binary(
+                            &bolt_env,
+                            &args.bolt_args,
+                            executable,
+                            Some(&profile_file),
+                        )?,
+                        None => {
+                            log::warn!(
+                                "No profiles found for target {}. \
+The optimization will probably not be very effective.",
+                                artifact.target.name.blue()
+                            );
+                            optimize_binary(&bolt_env, &args.bolt_args, executable, None)?
+                        }
+                    };
+                    log::info!(
+                        "{} {} successfully optimized with BOLT. You can find it at {}.",
+                        capitalize(get_artifact_kind(&artifact)).yellow(),
+                        artifact.target.name.blue(),
+                        cli_format_path(&optimized_path.display())
+                    );
                 }
             }
             Message::BuildFinished(res) => {
@@ -88,13 +94,20 @@ fn optimize_binary(
     bolt_env: &BoltEnv,
     bolt_args: &BoltArgs,
     binary: &Utf8PathBuf,
-    profile: &Path,
+    profile: Option<&Path>,
 ) -> anyhow::Result<PathBuf> {
-    log::debug!(
-        "Optimizing {} with BOLT profile {}.",
-        binary.as_str(),
-        profile.display()
-    );
+    match profile {
+        Some(profile) => {
+            log::debug!(
+                "Optimizing {} with BOLT profile {}.",
+                binary.as_str(),
+                profile.display()
+            );
+        }
+        None => {
+            log::debug!("Optimizing {} without a BOLT profile.", binary.as_str());
+        }
+    }
 
     let basename = binary
         .as_path()
@@ -106,16 +119,19 @@ fn optimize_binary(
         .expect("Cannot get parent of compiled binary")
         .join(format!("{}-bolt-optimized", basename));
 
-    let mut args = vec![
-        binary.to_string(),
-        "-data".to_string(),
-        profile
-            .to_str()
-            .expect("Could not convert profile path")
-            .to_string(),
-        "-o".to_string(),
-        target_path.to_string(),
-    ];
+    let mut args = vec![binary.to_string()];
+
+    if let Some(profile) = profile {
+        args.extend([
+            "-data".to_string(),
+            profile
+                .to_str()
+                .expect("Could not convert profile path")
+                .to_string(),
+        ]);
+    }
+
+    args.extend(["-o".to_string(), target_path.to_string()]);
 
     match bolt_args.bolt_args {
         Some(ref bolt_args) => add_bolt_args(&mut args, bolt_args)?,
@@ -150,23 +166,22 @@ fn optimize_binary(
     Ok(target_path.into_std_path_buf())
 }
 
-fn merge_profiles(
-    bolt_env: &BoltEnv,
-    profile_dir: &Path,
-    target_profile: &Path,
-) -> anyhow::Result<bool> {
+/// Merges BOLT profiles from `profile_dir` and returns a path to the merged profile file,
+/// if it was successfully generated.
+fn merge_profiles(bolt_env: &BoltEnv, profile_dir: &Path) -> anyhow::Result<Option<PathBuf>> {
     let mut command = Command::new(&bolt_env.merge_fdata);
 
     let profile_files = gather_fdata_files(profile_dir);
     if profile_files.is_empty() {
-        return Ok(false);
+        return Ok(None);
     }
 
     for file in profile_files {
         command.arg(file);
     }
 
-    let output_file = File::create(target_profile)?;
+    let target_profile = profile_dir.join("merged.profdata");
+    let output_file = File::create(&target_profile)?;
     let output_stdio = Stdio::from(output_file);
     command.stdout(output_stdio);
 
@@ -176,7 +191,7 @@ fn merge_profiles(
             "Merged BOLT profile(s) to {}.",
             cli_format_path(target_profile.display())
         );
-        Ok(true)
+        Ok(Some(target_profile))
     } else {
         Err(anyhow!(
             "Failed to merge BOLT profile(s): {}.",

@@ -31,6 +31,7 @@ fn test_bolt_instrument_run_instrumented_binary() -> anyhow::Result<()> {
 fn test_bolt_optimize_no_profile() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
     project.run(&["bolt", "optimize"])?.assert_ok();
+    assert!(project.bolt_optimized_binary().is_file());
 
     Ok(())
 }
