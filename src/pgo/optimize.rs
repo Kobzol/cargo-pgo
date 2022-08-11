@@ -1,5 +1,4 @@
-use std::ffi::OsStr;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use anyhow::anyhow;
@@ -18,6 +17,7 @@ use crate::build::{
 use crate::cli::cli_format_path;
 use crate::pgo::env::{find_pgo_env, PgoEnv};
 use crate::pgo::llvm_profdata_install_hint;
+use crate::utils::file::{gather_files_with_extension, hash_file};
 use crate::utils::str::pluralize;
 use crate::workspace::CargoContext;
 
@@ -32,10 +32,11 @@ pub struct PgoOptimizeArgs {
 
 /// Merges PGO profiles and creates RUSTFLAGS that use them.
 pub fn prepare_pgo_optimization_flags(pgo_env: &PgoEnv, pgo_dir: &Path) -> anyhow::Result<String> {
-    print_pgo_profile_stats(pgo_dir)?;
+    let stats = gather_pgo_profile_stats(pgo_dir)?;
 
-    let target_file = pgo_dir.join("merged.profdata");
-    merge_profiles(pgo_env, pgo_dir, &target_file)?;
+    print_pgo_profile_stats(&stats, pgo_dir)?;
+
+    let target_file = merge_profiles(pgo_env, &stats, pgo_dir)?;
 
     Ok(format!(
         "-Cprofile-use={} -Cllvm-args=-pgo-warn-missing-function",
@@ -103,33 +104,31 @@ pub fn pgo_optimize(ctx: CargoContext, args: PgoOptimizeArgs) -> anyhow::Result<
 
 #[derive(Debug, Default)]
 struct ProfileStats {
-    file_count: u64,
+    profile_files: Vec<PathBuf>,
     total_size: u64,
+}
+
+impl ProfileStats {
+    fn file_count(&self) -> usize {
+        self.profile_files.len()
+    }
 }
 
 /// Check if the directory with profiles is non-empty and prints basic profile statistics.
 fn gather_pgo_profile_stats(pgo_dir: &Path) -> anyhow::Result<ProfileStats> {
     let mut stats = ProfileStats::default();
 
-    for entry in pgo_dir.read_dir()? {
-        let entry = entry?;
-        let metadata = entry.metadata()?;
-
-        if metadata.is_file() && entry.path().extension() == Some(OsStr::new("profraw")) {
-            log::debug!("Found profile file {}.", entry.path().display());
-            stats.total_size += metadata.len();
-            stats.file_count += 1;
-        }
+    for file in gather_files_with_extension(pgo_dir, "profraw") {
+        log::debug!("Found profile file {}.", file.display());
+        stats.total_size += std::fs::metadata(&file)?.len();
+        stats.profile_files.push(file);
     }
 
     Ok(stats)
 }
 
-fn print_pgo_profile_stats(pgo_dir: &Path) -> anyhow::Result<()> {
-    log::debug!("Locating PGO profile files at {}.", pgo_dir.display());
-
-    let stats = gather_pgo_profile_stats(pgo_dir)?;
-    if stats.file_count == 0 {
+fn print_pgo_profile_stats(stats: &ProfileStats, pgo_dir: &Path) -> anyhow::Result<()> {
+    if stats.file_count() == 0 {
         return Err(anyhow!(
             "No profile files were found at {}. Did you execute your instrumented program?",
             cli_format_path(pgo_dir.display())
@@ -138,8 +137,8 @@ fn print_pgo_profile_stats(pgo_dir: &Path) -> anyhow::Result<()> {
 
     log::info!(
         "Found {} PGO profile {} with total size {} at {}.",
-        stats.file_count,
-        if stats.file_count > 1 {
+        stats.file_count(),
+        if stats.file_count() > 1 {
             "files"
         } else {
             "file"
@@ -160,27 +159,50 @@ pub fn get_pgo_env() -> anyhow::Result<PgoEnv> {
     Ok(pgo_env)
 }
 
-fn merge_profiles(pgo_env: &PgoEnv, pgo_dir: &Path, target_profile: &Path) -> anyhow::Result<()> {
+/// Merges PGO profiles from the given `pgo_dir` directory and returns a path to the merged profile.
+///
+/// This function takes care of calculating the hash of the profile and naming the profile with
+/// its given hash, so that if the contents of the profile change, the names of the profile will
+/// also change. This is done to properly invalidate the `rustc` compilation session
+/// (https://github.com/rust-lang/rust/issues/100397).
+fn merge_profiles(
+    pgo_env: &PgoEnv,
+    stats: &ProfileStats,
+    pgo_dir: &Path,
+) -> anyhow::Result<PathBuf> {
+    let tempdir = tempfile::tempdir()?;
+    let profile_tmp_path = tempdir.path().join("merged.profile");
+
+    // Merge profiles
     let mut command = Command::new(&pgo_env.llvm_profdata);
-    command.args(&[
-        "merge",
-        "-o",
-        &target_profile.display().to_string(),
-        &pgo_dir.display().to_string(),
-    ]);
+    command.args(&["merge", "-o", &profile_tmp_path.display().to_string()]);
+    for file in &stats.profile_files {
+        command.arg(file);
+    }
+
     let output = command.output()?;
-    if output.status.success() {
-        log::info!(
-            "Merged PGO profile(s) to {}.",
-            cli_format_path(target_profile.display())
-        );
-        Ok(())
-    } else {
+    if !output.status.success() {
         return Err(anyhow!(
             "Failed to merge PGO profile(s): {}.",
             String::from_utf8_lossy(&output.stderr).red()
         ));
     }
+
+    // Calculate hash
+    let hash = hash_file(&profile_tmp_path)
+        .map_err(|error| anyhow::anyhow!("Cannot hash merged profile file: {:?}", error))?;
+
+    let profile_name = format!("merged-{}.profdata", hash);
+    let target_profile = pgo_dir.join(profile_name);
+
+    // Move the merged profile to PGO profile directory
+    std::fs::rename(profile_tmp_path, &target_profile)?;
+
+    log::info!(
+        "Merged PGO profile(s) to {}.",
+        cli_format_path(target_profile.display())
+    );
+    Ok(target_profile)
 }
 
 struct PgoMissingProfile<'msg> {
