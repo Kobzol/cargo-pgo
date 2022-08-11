@@ -1,14 +1,18 @@
 # Dev
+## New features
+- Allow running `cargo pgo bolt optimize` without any profiles ([#14](https://github.com/Kobzol/cargo-pgo/pull/14)).
+- Add `cargo pgo bench` command and generalize instrumentation and optimization so that you can instrument
+  or optimize any supported Cargo command
+  ([#13](https://github.com/Kobzol/cargo-pgo/pull/13), [#9](https://github.com/Kobzol/cargo-pgo/pull/9)).
+- Allow passing custom flags to BOLT commands ([#10](https://github.com/Kobzol/cargo-pgo/pull/10)).
+
+## Fixes
 - Remove the `cargo` dependency and fix compilation of projects using namespaced features
   ([#2](https://github.com/Kobzol/cargo-pgo/pull/2)).
-- Allow running `cargo pgo bolt optimize` without any profiles ([#14](https://github.com/Kobzol/cargo-pgo/pull/14)).
-- Add `cargo bench` command and generalize instrumentation and optimization so that you can instrument
-or optimize any supported Cargo command
-([#13](https://github.com/Kobzol/cargo-pgo/pull/13), [#9](https://github.com/Kobzol/cargo-pgo/pull/9)).
+- Properly invalidate PGO profiles. ([#15](https://github.com/Kobzol/cargo-pgo/pull/15)).
 - Fix resolve of `llvm-profdata` on Windows ([#1](https://github.com/Kobzol/cargo-pgo/pull/1)).
 - Report errors if Cargo fails to build the target crate and if BOLT instrumentation fails
 ([#7](https://github.com/Kobzol/cargo-pgo/pull/7), [#8](https://github.com/Kobzol/cargo-pgo/pull/8)).
-- Allow passing custom flags to BOLT commands ([#10](https://github.com/Kobzol/cargo-pgo/pull/10)).
 - Correctly add a newline to text messages produced during compilation
   ([#12](https://github.com/Kobzol/cargo-pgo/pull/12)).
 
