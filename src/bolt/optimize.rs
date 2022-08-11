@@ -1,4 +1,3 @@
-use std::ffi::OsStr;
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -7,7 +6,6 @@ use anyhow::anyhow;
 use cargo_metadata::camino::Utf8PathBuf;
 use cargo_metadata::Message;
 use colored::Colorize;
-use walkdir::WalkDir;
 
 use crate::bolt::cli::{add_bolt_args, BoltArgs};
 use crate::bolt::env::{find_bolt_env, BoltEnv};
@@ -16,6 +14,7 @@ use crate::build::CargoCommand;
 use crate::build::{cargo_command_with_flags, get_artifact_kind, handle_metadata_message};
 use crate::cli::cli_format_path;
 use crate::run_command;
+use crate::utils::file::gather_files_with_extension;
 use crate::utils::str::capitalize;
 use crate::workspace::CargoContext;
 
@@ -171,7 +170,7 @@ fn optimize_binary(
 fn merge_profiles(bolt_env: &BoltEnv, profile_dir: &Path) -> anyhow::Result<Option<PathBuf>> {
     let mut command = Command::new(&bolt_env.merge_fdata);
 
-    let profile_files = gather_fdata_files(profile_dir);
+    let profile_files = gather_files_with_extension(profile_dir, "fdata");
     if profile_files.is_empty() {
         return Ok(None);
     }
@@ -198,20 +197,4 @@ fn merge_profiles(bolt_env: &BoltEnv, profile_dir: &Path) -> anyhow::Result<Opti
             String::from_utf8_lossy(&output.stderr).red()
         ))
     }
-}
-
-fn gather_fdata_files(directory: &Path) -> Vec<PathBuf> {
-    let mut files = vec![];
-
-    log::debug!("Finding profiles in {}.", directory.display());
-
-    let walker = WalkDir::new(directory).into_iter();
-    for entry in walker.flatten() {
-        if entry.file_type().is_file() && entry.path().extension() == Some(OsStr::new("fdata")) {
-            log::debug!("Found profile file: {:?}.", entry);
-            files.push(entry.path().to_path_buf());
-        }
-    }
-
-    files
 }
