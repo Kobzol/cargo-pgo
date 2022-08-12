@@ -1,4 +1,4 @@
-# Dev
+# 0.2.0 (12. 8. 2022)
 ## New features
 - Allow running `cargo pgo bolt optimize` without any profiles ([#14](https://github.com/Kobzol/cargo-pgo/pull/14)).
 - Add `cargo pgo bench` command and generalize instrumentation and optimization so that you can instrument
