@@ -44,3 +44,23 @@ pub fn gather_files_with_extension(directory: &Path, extension: &str) -> Vec<Pat
 
     files
 }
+
+/// Moves `src` to `dst`.
+/// If the file cannot be moved, it will be copied and then deleted.
+pub fn move_file(src: &Path, dest: &Path) -> std::io::Result<()> {
+    match std::fs::rename(src, dest) {
+        Ok(_) => {}
+        Err(error) => {
+            log::debug!(
+                "Couldn't move file from {} to {}: {:?}",
+                src.display(),
+                dest.display(),
+                error
+            );
+            std::fs::copy(src, dest)?;
+            std::fs::remove_file(src)?;
+        }
+    }
+
+    Ok(())
+}

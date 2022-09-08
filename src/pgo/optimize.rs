@@ -17,7 +17,7 @@ use crate::build::{
 use crate::cli::cli_format_path;
 use crate::pgo::env::{find_pgo_env, PgoEnv};
 use crate::pgo::llvm_profdata_install_hint;
-use crate::utils::file::{gather_files_with_extension, hash_file};
+use crate::utils::file::{gather_files_with_extension, hash_file, move_file};
 use crate::utils::str::pluralize;
 use crate::workspace::CargoContext;
 
@@ -196,7 +196,7 @@ fn merge_profiles(
     let target_profile = pgo_dir.join(profile_name);
 
     // Move the merged profile to PGO profile directory
-    std::fs::rename(profile_tmp_path, &target_profile)?;
+    move_file(&profile_tmp_path, &target_profile)?;
 
     log::info!(
         "Merged PGO profile(s) to {}.",
