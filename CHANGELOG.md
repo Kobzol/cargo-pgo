@@ -1,3 +1,7 @@
+# 0.2.1 (27. 9. 2022)
+## Fixes
+- Fix file moving across different devices in `cargo pgo optimize` ([#17](https://github.com/Kobzol/cargo-pgo/pull/17)).
+
 # 0.2.0 (12. 8. 2022)
 ## New features
 - Allow running `cargo pgo bolt optimize` without any profiles ([#14](https://github.com/Kobzol/cargo-pgo/pull/14)).
