@@ -1,5 +1,6 @@
-use crate::build::CargoCommand;
-use crate::build::{cargo_command_with_flags, get_artifact_kind, handle_metadata_message};
+use crate::build::{
+    cargo_command_with_flags, get_artifact_kind, handle_metadata_message, CargoCommand,
+};
 use crate::clear_directory;
 use crate::cli::cli_format_path;
 use crate::workspace::CargoContext;
@@ -46,10 +47,9 @@ pub fn pgo_instrument(ctx: CargoContext, args: PgoInstrumentArgs) -> anyhow::Res
     );
 
     let flags = format!("-Cprofile-generate={}", pgo_dir.display());
-    let output = cargo_command_with_flags(args.command, &flags, args.cargo_args)?;
-    log::debug!("Cargo stderr\n {}", String::from_utf8_lossy(&output.stderr));
+    let mut cargo = cargo_command_with_flags(args.command, &flags, args.cargo_args)?;
 
-    for message in Message::parse_stream(output.stdout.as_slice()) {
+    for message in cargo.messages() {
         let message = message?;
         match message {
             Message::CompilerArtifact(artifact) => {
@@ -87,6 +87,8 @@ it with the following environment variable: {}.",
             _ => handle_metadata_message(message),
         }
     }
+
+    cargo.check_status()?;
 
     Ok(())
 }

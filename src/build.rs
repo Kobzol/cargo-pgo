@@ -1,10 +1,9 @@
 use crate::get_default_target;
-use cargo_metadata::{Artifact, Message};
-use colored::Colorize;
+use cargo_metadata::{Artifact, Message, MessageIter};
 use std::collections::HashMap;
 use std::fmt::Write as WriteFmt;
-use std::io::Write;
-use std::process::{Command, Output};
+use std::io::{BufReader, Write};
+use std::process::{Child, ChildStdout, Command, Stdio};
 
 #[derive(Debug, Default)]
 struct CargoArgs {
@@ -17,12 +16,34 @@ enum ReleaseMode {
     NoRelease,
 }
 
-/// Run `cargo` command in release mode with the provided RUSTFLAGS and Cargo arguments.
+pub struct RunningCargo {
+    child: Child,
+    message_iter: MessageIter<BufReader<ChildStdout>>,
+}
+
+impl RunningCargo {
+    pub fn messages(&mut self) -> &mut MessageIter<BufReader<ChildStdout>> {
+        &mut self.message_iter
+    }
+
+    pub fn check_status(mut self) -> anyhow::Result<()> {
+        let status = self.child.wait()?;
+        if !status.success() {
+            return Err(anyhow::anyhow!(
+                "Cargo finished with an error ({})",
+                status.code().unwrap_or(-1),
+            ));
+        }
+        Ok(())
+    }
+}
+
+/// Start a `cargo` command in release mode with the provided RUSTFLAGS and Cargo arguments.
 pub fn cargo_command_with_flags(
     command: CargoCommand,
     flags: &str,
     cargo_args: Vec<String>,
-) -> anyhow::Result<Output> {
+) -> anyhow::Result<RunningCargo> {
     let mut rustflags = std::env::var("RUSTFLAGS").unwrap_or_default();
     write!(&mut rustflags, " {}", flags).unwrap();
 
@@ -34,38 +55,21 @@ pub fn cargo_command_with_flags(
         _ => ReleaseMode::AddRelease,
     };
 
-    let output = cargo_command(command, cargo_args, env, release_mode)?;
-    if !output.status.success() {
-        Err(anyhow::anyhow!(
-            "Cargo error ({})\n{}\n{}",
-            output.status,
-            String::from_utf8_lossy(&output.stderr).red(),
-            cargo_json_output_to_string(&output.stdout)
-                .unwrap_or_else(|error| format!("Could not parse Cargo stdout: {}", error))
-        ))
-    } else {
-        Ok(output)
-    }
+    let mut child = cargo_command(command, cargo_args, env, release_mode)?;
+    let stdout = child.stdout.take().unwrap();
+    Ok(RunningCargo {
+        child,
+        message_iter: Message::parse_stream(BufReader::new(stdout)),
+    })
 }
 
-fn cargo_json_output_to_string(output: &[u8]) -> anyhow::Result<String> {
-    let mut messages = Vec::new();
-
-    for message in Message::parse_stream(output) {
-        let message = message?;
-        write_metadata_message(&mut messages, message);
-    }
-
-    Ok(String::from_utf8(messages)?)
-}
-
-/// Run `cargo` command in release mode with the provided env variables and Cargo arguments.
+/// Spawn `cargo` command in release mode with the provided env variables and Cargo arguments.
 fn cargo_command(
     cargo_cmd: CargoCommand,
     cargo_args: Vec<String>,
     env: HashMap<String, String>,
     release_mode: ReleaseMode,
-) -> anyhow::Result<Output> {
+) -> anyhow::Result<Child> {
     let parsed_args = parse_cargo_args(cargo_args);
 
     let mut command = Command::new("cargo");
@@ -74,6 +78,9 @@ fn cargo_command(
         "--message-format",
         "json-diagnostic-rendered-ansi",
     ]);
+    command.stdin(Stdio::null());
+    command.stdout(Stdio::piped());
+    command.stderr(Stdio::inherit());
 
     match release_mode {
         ReleaseMode::AddRelease => {
@@ -101,7 +108,7 @@ fn cargo_command(
         command.env(key, value);
     }
     log::debug!("Executing cargo command: {:?}", command);
-    Ok(command.output()?)
+    Ok(command.spawn()?)
 }
 
 fn parse_cargo_args(cargo_args: Vec<String>) -> CargoArgs {
@@ -130,7 +137,10 @@ fn parse_cargo_args(cargo_args: Vec<String>) -> CargoArgs {
 }
 
 pub fn handle_metadata_message(message: Message) {
-    write_metadata_message(std::io::stdout().lock(), message);
+    let stdout = std::io::stdout();
+    let mut stdout = stdout.lock();
+    write_metadata_message(&mut stdout, message);
+    stdout.flush().unwrap();
 }
 
 fn write_metadata_message<W: Write>(mut stream: W, message: Message) {
@@ -148,7 +158,9 @@ fn write_metadata_message<W: Write>(mut stream: W, message: Message) {
             )
             .unwrap();
         }
-        _ => {}
+        _ => {
+            log::debug!("Metadata output: {:?}", message);
+        }
     }
 }
 

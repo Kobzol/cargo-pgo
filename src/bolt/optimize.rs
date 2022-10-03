@@ -10,8 +10,9 @@ use colored::Colorize;
 use crate::bolt::cli::{add_bolt_args, BoltArgs};
 use crate::bolt::env::{find_bolt_env, BoltEnv};
 use crate::bolt::{bolt_pgo_rustflags, get_binary_profile_dir};
-use crate::build::CargoCommand;
-use crate::build::{cargo_command_with_flags, get_artifact_kind, handle_metadata_message};
+use crate::build::{
+    cargo_command_with_flags, get_artifact_kind, handle_metadata_message, CargoCommand,
+};
 use crate::cli::cli_format_path;
 use crate::run_command;
 use crate::utils::file::gather_files_with_extension;
@@ -36,9 +37,9 @@ pub fn bolt_optimize(ctx: CargoContext, args: BoltOptimizeArgs) -> anyhow::Resul
     let bolt_env = find_bolt_env()?;
 
     let flags = bolt_pgo_rustflags(&ctx, args.with_pgo)?;
-    let output = cargo_command_with_flags(CargoCommand::Build, &flags, args.cargo_args)?;
+    let mut cargo = cargo_command_with_flags(CargoCommand::Build, &flags, args.cargo_args)?;
 
-    for message in Message::parse_stream(output.stdout.as_slice()) {
+    for message in cargo.messages() {
         let message = message?;
         match message {
             Message::CompilerArtifact(artifact) => {
@@ -84,6 +85,8 @@ The optimization will probably not be very effective.",
             _ => handle_metadata_message(message),
         }
     }
+
+    cargo.check_status()?;
 
     Ok(())
 }

@@ -50,11 +50,10 @@ pub fn pgo_optimize(ctx: CargoContext, args: PgoOptimizeArgs) -> anyhow::Result<
 
     let flags = prepare_pgo_optimization_flags(&pgo_env, &pgo_dir)?;
 
-    let output = cargo_command_with_flags(args.command, &flags, args.cargo_args)?;
-    log::debug!("Cargo stderr\n {}", String::from_utf8_lossy(&output.stderr));
+    let mut cargo = cargo_command_with_flags(args.command, &flags, args.cargo_args)?;
 
     let mut counter = MissingProfileCounter::default();
-    for message in Message::parse_stream(output.stdout.as_slice()) {
+    for message in cargo.messages() {
         let message = message?;
         match message {
             Message::CompilerArtifact(artifact) => {
@@ -90,6 +89,8 @@ pub fn pgo_optimize(ctx: CargoContext, args: PgoOptimizeArgs) -> anyhow::Result<
             _ => handle_metadata_message(message),
         }
     }
+
+    cargo.check_status()?;
 
     if counter.counter > 0 {
         log::warn!(
