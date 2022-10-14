@@ -1,3 +1,8 @@
+# Dev
+## Changes
+- The output of Cargo is now streamed interactively, rather than being buffered up until the build exists.
+This should make the output of `cargo pgo` commands much more interactive ([#20](https://github.com/Kobzol/cargo-pgo/pull/20)).
+
 # 0.2.1 (27. 9. 2022)
 ## Fixes
 - Fix file moving across different devices in `cargo pgo optimize` ([#17](https://github.com/Kobzol/cargo-pgo/pull/17)).
