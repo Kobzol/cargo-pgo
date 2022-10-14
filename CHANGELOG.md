@@ -1,4 +1,4 @@
-# Dev
+# 0.2.2 (14. 10. 2022)
 ## Changes
 - The output of Cargo is now streamed interactively, rather than being buffered up until the build exists.
 This should make the output of `cargo pgo` commands much more interactive ([#20](https://github.com/Kobzol/cargo-pgo/pull/20)).
