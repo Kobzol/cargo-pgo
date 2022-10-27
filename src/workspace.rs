@@ -1,3 +1,4 @@
+use crate::ensure_directory;
 use std::path::{Path, PathBuf};
 
 pub struct CargoContext {
@@ -15,7 +16,7 @@ impl CargoContext {
 
     fn get_target_directory(&self, path: &Path) -> anyhow::Result<PathBuf> {
         let directory = self.target_directory.join(path);
-        std::fs::create_dir_all(&directory)?;
+        ensure_directory(&directory)?;
         Ok(directory)
     }
 }

@@ -13,6 +13,11 @@ pub struct PgoInstrumentArgs {
     /// Cargo command that will be used for PGO-instrumented compilation.
     #[clap(value_enum, default_value = "build")]
     command: CargoCommand,
+
+    /// Do not remove profiles that were gathered during previous runs.
+    #[clap(long, takes_value = false)]
+    keep_profiles: bool,
+
     /// Additional arguments that will be passed to the executed `cargo` command.
     cargo_args: Vec<String>,
 }
@@ -20,16 +25,24 @@ pub struct PgoInstrumentArgs {
 #[derive(clap::Parser, Debug)]
 #[clap(trailing_var_arg(true))]
 pub struct PgoInstrumentShortcutArgs {
+    /// Do not remove profiles that were gathered during previous runs.
+    #[clap(long, takes_value = false)]
+    keep_profiles: bool,
+
     /// Additional arguments that will be passed to the executed `cargo` command.
     cargo_args: Vec<String>,
 }
 
 impl PgoInstrumentShortcutArgs {
     pub fn into_full_args(self, command: CargoCommand) -> PgoInstrumentArgs {
-        let PgoInstrumentShortcutArgs { cargo_args } = self;
+        let PgoInstrumentShortcutArgs {
+            keep_profiles,
+            cargo_args,
+        } = self;
 
         PgoInstrumentArgs {
             command,
+            keep_profiles,
             cargo_args,
         }
     }
@@ -38,8 +51,10 @@ impl PgoInstrumentShortcutArgs {
 pub fn pgo_instrument(ctx: CargoContext, args: PgoInstrumentArgs) -> anyhow::Result<()> {
     let pgo_dir = ctx.get_pgo_directory()?;
 
-    log::info!("PGO profile directory will be cleared.");
-    clear_directory(&pgo_dir)?;
+    if !args.keep_profiles {
+        log::info!("PGO profile directory will be cleared.");
+        clear_directory(&pgo_dir)?;
+    }
 
     log::info!(
         "PGO profiles will be stored into {}.",

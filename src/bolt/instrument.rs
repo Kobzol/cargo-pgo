@@ -23,6 +23,11 @@ pub struct BoltInstrumentArgs {
     /// Later also pass the same flag to `cargo pgo bolt optimize`.
     #[clap(long)]
     with_pgo: bool,
+
+    /// Do not remove profiles that were gathered during previous runs.
+    #[clap(long, takes_value = false)]
+    keep_profiles: bool,
+
     #[clap(flatten)]
     bolt_args: BoltArgs,
     /// Additional arguments that will be passed to `cargo build`.
@@ -31,11 +36,12 @@ pub struct BoltInstrumentArgs {
 
 pub fn bolt_instrument(ctx: CargoContext, args: BoltInstrumentArgs) -> anyhow::Result<()> {
     let bolt_dir = ctx.get_bolt_directory()?;
-
     let bolt_env = find_bolt_env()?;
 
-    log::info!("BOLT profile directory will be cleared.");
-    clear_directory(&bolt_dir)?;
+    if !args.keep_profiles {
+        log::info!("BOLT profile directory will be cleared.");
+        clear_directory(&bolt_dir)?;
+    }
 
     log::info!(
         "BOLT profiles will be stored into {}.",

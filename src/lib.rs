@@ -95,5 +95,10 @@ fn get_rustc_info(field: &str) -> anyhow::Result<String> {
 /// Clears all files from the directory, and recreates it.
 fn clear_directory(path: &Path) -> std::io::Result<()> {
     std::fs::remove_dir_all(path)?;
+    ensure_directory(path)
+}
+
+/// Make sure that direcetory exists.
+fn ensure_directory(path: &Path) -> std::io::Result<()> {
     std::fs::create_dir_all(path)
 }
