@@ -179,7 +179,7 @@ Here's a short guide how to compile LLVM with BOLT. You will need a recent compi
    Note that BOLT is being actively fixed, so a `trunk` version of LLVM might actually work better.
 3) Prepare the build
     ```bash
-    $ cmake -S llvm -B build -G ninja \
+    $ cmake -S llvm -B build -G Ninja \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_INSTALL_PREFIX=${PWD}/llvm-install \
       -DLLVM_ENABLE_PROJECTS="clang;lld;compiler-rt;bolt"
