@@ -1,3 +1,8 @@
+# 0.2.3 (8. 11. 2022)
+## New features
+- Add `--keep-profiles` flag to `cargo pgo run` to avoid clearing the gathered PGO profiles from
+previous runs ([#23](https://github.com/Kobzol/cargo-pgo/issues/23)).
+
 # 0.2.2 (14. 10. 2022)
 ## Changes
 - The output of Cargo is now streamed interactively, rather than being buffered up until the build exits.
