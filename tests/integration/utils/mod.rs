@@ -1,7 +1,8 @@
 use cargo_pgo::get_default_target;
 use std::ffi::OsStr;
+use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Output};
+use std::process::{Command, Output, Stdio};
 use tempfile::TempDir;
 
 pub struct CargoProject {
@@ -12,19 +13,31 @@ pub struct CargoProject {
 
 impl CargoProject {
     pub fn run(&self, args: &[&str]) -> anyhow::Result<Output> {
+        self.run_with_input(args, &[])
+    }
+
+    pub fn run_with_input(&self, args: &[&str], stdin: &[u8]) -> anyhow::Result<Output> {
         let mut command = Command::new("cargo");
         command.arg("pgo");
         for arg in args {
             command.arg(arg);
         }
         command.current_dir(&self.dir);
+        command.stdin(Stdio::piped());
+        command.stdout(Stdio::piped());
 
         let path = std::env::var("PATH").unwrap_or_default();
         let path = format!("{}:{}", cargo_pgo_target_dir().display(), path);
 
         command.env("PATH", path);
 
-        let output = command.output()?;
+        let mut child = command.spawn()?;
+        {
+            let mut child_stdin = child.stdin.take().unwrap();
+            child_stdin.write_all(stdin)?;
+        }
+
+        let output = child.wait_with_output()?;
         Ok(output)
     }
 

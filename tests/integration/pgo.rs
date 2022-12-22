@@ -179,3 +179,28 @@ fn test_instrument_bench() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_run_handle_input() -> anyhow::Result<()> {
+    let mut project = init_cargo_project()?;
+    project.file(
+        "src/main.rs",
+        r#"
+use std::io::BufRead;
+
+fn main() {
+    let stdin = std::io::stdin();
+    let line = stdin.lock().lines().next().unwrap().unwrap();
+    println!("REPEAT: {}", line);
+}
+"#,
+    );
+
+    let output = project.run_with_input(&["run"], b"FOOBAR")?.assert_ok();
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains("REPEAT: FOOBAR"));
+
+    project.run(&["optimize"])?.assert_ok();
+
+    Ok(())
+}

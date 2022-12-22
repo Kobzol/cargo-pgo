@@ -78,7 +78,7 @@ fn cargo_command(
         "--message-format",
         "json-diagnostic-rendered-ansi",
     ]);
-    command.stdin(Stdio::null());
+    command.stdin(Stdio::inherit());
     command.stdout(Stdio::piped());
     command.stderr(Stdio::inherit());
 
