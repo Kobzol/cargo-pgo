@@ -1,3 +1,7 @@
+# 0.2.4 (16. 1. 2022)
+## Fixes
+- Do not close `stdin` when executing `cargo pgo run` ([#28](https://github.com/Kobzol/cargo-pgo/issues/28)).
+
 # 0.2.3 (8. 11. 2022)
 ## New features
 - Add `--keep-profiles` flag to `cargo pgo run` to avoid clearing the gathered PGO profiles from
