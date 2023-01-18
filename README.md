@@ -164,8 +164,11 @@ $ cargo pgo bolt optimize --with-pgo
 ```
 
 ### BOLT installation
-Here's a short guide how to compile LLVM with BOLT. You will need a recent compiler, `CMake` and
+Here's a short guide how to compile LLVM with BOLT manually. You will need a recent compiler, `CMake` and
 `ninja`.
+
+> Note: LLVM BOLT is slowly getting into package repositories, although it's not fully working out of the box yet.
+> You can find more details [here](https://github.com/Kobzol/cargo-pgo/issues/31) if you're interested.
 
 1) Download LLVM
     ```bash
