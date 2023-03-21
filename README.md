@@ -123,6 +123,12 @@ $ cargo pgo optimize bench
 $ cargo pgo optimize test
 ```
 
+### Analyzing PGO profiles
+You can analyze gathered PGO profiles using the `llvm-profdata` binary:
+```console
+$ llvm-profdata show <profile>.profdata
+```
+
 ## BOLT
 Using BOLT with `cargo-pgo` is similar to using PGO, however you have to [build](#bolt-installation)
 BOLT manually and support for it is currently in an experimental stage.
