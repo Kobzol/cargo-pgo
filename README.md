@@ -163,6 +163,9 @@ $ ./target/.../<binary>-bolt-instrumented
 $ cargo pgo bolt optimize --with-pgo
 ```
 
+> Do not strip symbols from your release binary when using BOLT! If you do it, you might encounter
+> linker errors.
+
 ### BOLT installation
 Here's a short guide how to compile LLVM with BOLT manually. You will need a recent compiler, `CMake` and
 `ninja`.
