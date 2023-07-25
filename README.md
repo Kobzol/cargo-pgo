@@ -130,8 +130,9 @@ $ llvm-profdata show <profile>.profdata
 ```
 
 ## BOLT
-Using BOLT with `cargo-pgo` is similar to using PGO, however you have to [build](#bolt-installation)
-BOLT manually and support for it is currently in an experimental stage.
+Using BOLT with `cargo-pgo` is similar to using PGO, however you either have to [build](#bolt-installation)
+BOLT manually or download it from the GitHub releases archive (for LLVM 16+). Support for BOLT is currently in an
+experimental stage.
 
 BOLT is not supported directly by `rustc`, so the instrumentation and optimization commands are not
 directly applied to binaries built by `rustc`. Instead, `cargo-pgo` creates additional binaries that
