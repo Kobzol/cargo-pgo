@@ -8,6 +8,8 @@
 **Cargo subcommand that makes it easier to use [PGO](https://doc.rust-lang.org/rustc/profile-guided-optimization.html)
 and [BOLT](https://github.com/llvm/llvm-project/tree/main/bolt) to optimize Rust binaries.**
 
+For an example on how to use `cargo-pgo` to optimize a binary on GitHub Actions CI, see [this workflow](ci/pgo.yml).
+
 # Installation
 ```bash
 $ cargo install cargo-pgo

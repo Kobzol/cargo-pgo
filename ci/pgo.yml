@@ -1,0 +1,41 @@
+# This is an example GitHub Actions workflow that demonstrates how you can optimize your Rust binaries
+# with PGO on CI.
+name: PGO optimization workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  optimize:
+    name: Optimize
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+          components: llvm-tools-preview
+
+      - name: Cache Rust artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install cargo-pgo
+        run: cargo install cargo-pgo
+
+      - name: Build instrumented binary
+        run: cargo pgo build
+
+      # Run the instrumented binary on some workflow to gather profiles
+      - name: Gather PGO profiles
+        run: ./target/x86_64-unknown-linux-gnu/release/foo
+
+      - name: Build optimized binary
+        run: cargo pgo optimize
