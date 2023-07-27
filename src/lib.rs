@@ -98,7 +98,7 @@ fn clear_directory(path: &Path) -> std::io::Result<()> {
     ensure_directory(path)
 }
 
-/// Make sure that direcetory exists.
+/// Make sure that directory exists.
 fn ensure_directory(path: &Path) -> std::io::Result<()> {
     std::fs::create_dir_all(path)
 }

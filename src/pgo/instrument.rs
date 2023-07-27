@@ -76,8 +76,9 @@ pub fn pgo_instrument(ctx: CargoContext, args: PgoInstrumentArgs) -> anyhow::Res
                             artifact.target.name.blue()
                         );
                         log::info!(
-                            "Now run {} on your workload.\nFor more precise profiles, run \
-it with the following environment variable: {}.",
+                            "Now run {} on your workload.\nIf your program creates multiple processes \
+or you will execute it multiple times in parallel, consider running it \
+with the following environment variable to have more precise profiles:\n{}",
                             cli_format_path(&executable),
                             format!(
                                 "LLVM_PROFILE_FILE={}/{}_%m_%p.profraw",
