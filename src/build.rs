@@ -10,6 +10,7 @@ use std::process::{Child, ChildStdout, Command, Stdio};
 pub struct CargoArgs {
     pub filtered: Vec<String>,
     pub contains_target: bool,
+    pub contains_profile: bool,
     pub target_dir: Option<PathBuf>,
 }
 
@@ -105,7 +106,9 @@ fn cargo_command(
 
     match release_mode {
         ReleaseMode::AddRelease => {
-            command.arg("--release");
+            if !parsed_args.contains_profile {
+                command.arg("--release");
+            }
         }
         ReleaseMode::NoRelease => {}
     }
@@ -150,6 +153,14 @@ pub fn parse_cargo_args(cargo_args: Vec<String>) -> CargoArgs {
                     // Check if `--target` was passed
                     args.contains_target = true;
                     args.filtered.push("--target".to_string());
+                    if let Some(value) = value {
+                        args.filtered.push(value);
+                    }
+                } else if let Some(value) = get_key_value("--profile", arg.as_str(), &mut iterator)
+                {
+                    // Check if `--profile` was passed
+                    args.contains_profile = true;
+                    args.filtered.push("--profile".to_string());
                     if let Some(value) = value {
                         args.filtered.push(value);
                     }
