@@ -12,6 +12,12 @@ pub fn llvm_bolt_install_hint() -> &'static str {
     "Build LLVM with BOLT and add its `bin` directory to PATH."
 }
 
+#[cfg(target_os = "macos")]
+fn bolt_common_rustflags() -> &'static str {
+    "-C link-args=-Wl,-keep_relocs"
+}
+
+#[cfg(not(target_os = "macos"))]
 fn bolt_common_rustflags() -> &'static str {
     "-C link-args=-Wl,-q"
 }
