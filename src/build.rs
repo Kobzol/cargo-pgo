@@ -3,12 +3,14 @@ use cargo_metadata::{Artifact, Message, MessageIter};
 use std::collections::HashMap;
 use std::fmt::Write as WriteFmt;
 use std::io::{BufReader, Write};
+use std::path::PathBuf;
 use std::process::{Child, ChildStdout, Command, Stdio};
 
 #[derive(Debug, Default)]
-struct CargoArgs {
-    filtered: Vec<String>,
-    contains_target: bool,
+pub struct CargoArgs {
+    pub filtered: Vec<String>,
+    pub contains_target: bool,
+    pub target_dir: Option<PathBuf>,
 }
 
 enum ReleaseMode {
@@ -130,7 +132,7 @@ fn cargo_command(
     Ok(command.spawn()?)
 }
 
-fn parse_cargo_args(cargo_args: Vec<String>) -> CargoArgs {
+pub fn parse_cargo_args(cargo_args: Vec<String>) -> CargoArgs {
     let mut args = CargoArgs::default();
 
     let mut iterator = cargo_args.into_iter();
@@ -148,6 +150,15 @@ fn parse_cargo_args(cargo_args: Vec<String>) -> CargoArgs {
                     // Check if `--target` was passed
                     args.contains_target = true;
                     args.filtered.push("--target".to_string());
+                    if let Some(value) = value {
+                        args.filtered.push(value);
+                    }
+                } else if let Some(value) =
+                    get_key_value("--target-dir", arg.as_str(), &mut iterator)
+                {
+                    // Extract `--target-dir`
+                    args.target_dir = value.clone().map(PathBuf::from);
+                    args.filtered.push("--target-dir".to_string());
                     if let Some(value) = value {
                         args.filtered.push(value);
                     }
@@ -237,6 +248,7 @@ pub fn get_artifact_kind(artifact: &Artifact) -> &str {
 #[cfg(test)]
 mod tests {
     use crate::build::{get_key_value, parse_cargo_args};
+    use std::path::PathBuf;
 
     #[test]
     fn parse_cargo_args_filter_release() {
@@ -291,6 +303,38 @@ mod tests {
             vec!["--target".to_string(), "x64".to_string(), "bar".to_string()]
         );
         assert!(args.contains_target);
+    }
+
+    #[test]
+    fn parse_cargo_args_target_dir() {
+        let args = parse_cargo_args(vec![
+            "--target-dir".to_string(),
+            "/tmp/foo".to_string(),
+            "bar".to_string(),
+        ]);
+        assert_eq!(
+            args.filtered,
+            vec![
+                "--target-dir".to_string(),
+                "/tmp/foo".to_string(),
+                "bar".to_string()
+            ]
+        );
+        assert_eq!(args.target_dir, Some(PathBuf::from("/tmp/foo")));
+    }
+
+    #[test]
+    fn parse_cargo_args_target_dir_equals() {
+        let args = parse_cargo_args(vec!["--target-dir=/tmp/foo".to_string(), "bar".to_string()]);
+        assert_eq!(
+            args.filtered,
+            vec![
+                "--target-dir".to_string(),
+                "/tmp/foo".to_string(),
+                "bar".to_string()
+            ]
+        );
+        assert_eq!(args.target_dir, Some(PathBuf::from("/tmp/foo")));
     }
 
     #[test]

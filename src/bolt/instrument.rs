@@ -34,6 +34,12 @@ pub struct BoltInstrumentArgs {
     cargo_args: Vec<String>,
 }
 
+impl BoltInstrumentArgs {
+    pub fn cargo_args(&self) -> &[String] {
+        &self.cargo_args
+    }
+}
+
 pub fn bolt_instrument(ctx: CargoContext, args: BoltInstrumentArgs) -> anyhow::Result<()> {
     let bolt_dir = ctx.get_bolt_directory()?;
     let bolt_env = find_bolt_env()?;

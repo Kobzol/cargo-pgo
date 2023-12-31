@@ -30,6 +30,12 @@ pub struct PgoOptimizeArgs {
     cargo_args: Vec<String>,
 }
 
+impl PgoOptimizeArgs {
+    pub fn cargo_args(&self) -> &[String] {
+        &self.cargo_args
+    }
+}
+
 /// Merges PGO profiles and creates RUSTFLAGS that use them.
 pub fn prepare_pgo_optimization_flags(pgo_env: &PgoEnv, pgo_dir: &Path) -> anyhow::Result<String> {
     let stats = gather_pgo_profile_stats(pgo_dir)?;

@@ -22,6 +22,12 @@ pub struct PgoInstrumentArgs {
     cargo_args: Vec<String>,
 }
 
+impl PgoInstrumentArgs {
+    pub fn cargo_args(&self) -> &[String] {
+        &self.cargo_args
+    }
+}
+
 #[derive(clap::Parser, Debug)]
 #[clap(trailing_var_arg(true))]
 pub struct PgoInstrumentShortcutArgs {
@@ -31,6 +37,12 @@ pub struct PgoInstrumentShortcutArgs {
 
     /// Additional arguments that will be passed to the executed `cargo` command.
     cargo_args: Vec<String>,
+}
+
+impl PgoInstrumentShortcutArgs {
+    pub fn cargo_args(&self) -> &[String] {
+        &self.cargo_args
+    }
 }
 
 impl PgoInstrumentShortcutArgs {
