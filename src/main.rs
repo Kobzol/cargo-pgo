@@ -58,10 +58,38 @@ enum BoltArgs {
     Optimize(BoltOptimizeArgs),
 }
 
+impl BoltArgs {
+    fn cargo_args(&self) -> &[String] {
+        match self {
+            BoltArgs::Build(args) => args.cargo_args(),
+            BoltArgs::Optimize(args) => args.cargo_args(),
+        }
+    }
+}
+
+impl Args {
+    fn cargo_args(&self) -> &[String] {
+        match self {
+            Args::Pgo(args) => match args {
+                Subcommand::Info => &[],
+                Subcommand::Instrument(args) => args.cargo_args(),
+                Subcommand::Build(args)
+                | Subcommand::Run(args)
+                | Subcommand::Test(args)
+                | Subcommand::Bench(args) => args.cargo_args(),
+                Subcommand::Optimize(args) => args.cargo_args(),
+                Subcommand::Bolt(args) => args.cargo_args(),
+                Subcommand::Clean => &[],
+            },
+        }
+    }
+}
+
 fn run() -> anyhow::Result<()> {
     let args = Args::parse();
 
-    let ctx = get_cargo_ctx()?;
+    let cargo_args = args.cargo_args();
+    let ctx = get_cargo_ctx(cargo_args)?;
 
     let Args::Pgo(args) = args;
     match args {

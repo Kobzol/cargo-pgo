@@ -1,4 +1,5 @@
 use crate::utils::{get_dir_files, init_cargo_project, run_command};
+use cargo_pgo::get_default_target;
 
 use crate::utils::OutputExt;
 
@@ -201,6 +202,30 @@ fn main() {
     assert!(stdout.contains("REPEAT: FOOBAR"));
 
     project.run(&["optimize"])?.assert_ok();
+
+    Ok(())
+}
+
+#[test]
+fn test_respect_target_dir() -> anyhow::Result<()> {
+    let project = init_cargo_project()?;
+    let target_dir = project.path("custom-target-dir");
+    let profile_dir = target_dir.join("pgo-profiles");
+
+    project
+        .run(&["build", "--", "--target-dir", target_dir.to_str().unwrap()])?
+        .assert_ok();
+    assert!(!project.default_pgo_profile_dir().is_dir());
+    assert!(profile_dir.is_dir());
+
+    run_command(
+        target_dir
+            .join(get_default_target()?)
+            .join("release")
+            .join("foo"),
+    )?;
+
+    assert!(!get_dir_files(&profile_dir)?.is_empty());
 
     Ok(())
 }

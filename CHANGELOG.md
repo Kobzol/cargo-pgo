@@ -1,3 +1,7 @@
+# Dev
+## Fixes
+- Respect the `--target-dir` cargo argument and improve parsing of cargo arguments in general.
+
 # 0.2.4 (16. 1. 2023)
 ## Fixes
 - Do not close `stdin` when executing `cargo pgo run` ([#28](https://github.com/Kobzol/cargo-pgo/issues/28)).
