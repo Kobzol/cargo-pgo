@@ -11,6 +11,9 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust-version: [ 1.56.1, stable, beta, nightly ]
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
@@ -19,7 +22,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.56.1
+          toolchain: ${{ matrix.rust-version }}
           override: true
           components: clippy, rustfmt, llvm-tools-preview
 
