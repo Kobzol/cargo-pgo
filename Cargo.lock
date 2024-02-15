@@ -102,6 +102,7 @@ dependencies = [
  "semver",
  "shellwords",
  "tempfile",
+ "version_check",
  "walkdir",
  "which",
 ]
