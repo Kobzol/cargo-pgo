@@ -1,6 +1,7 @@
 # Dev
 ## Fixes
 - Respect the `--profile` cargo argument.
+- Do not filter or modify `cargo pgo run` arguments passed to the executed binary.
 
 # 0.2.5 (31. 12. 2023)
 ## Fixes
