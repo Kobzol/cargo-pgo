@@ -355,6 +355,38 @@ mod tests {
     }
 
     #[test]
+    fn parse_cargo_args_profile() {
+        let args = parse_cargo_args(vec!["--profile".to_string(), "dev".to_string()]);
+        assert_eq!(
+            args.filtered,
+            vec!["--profile".to_string(), "dev".to_string(),]
+        );
+        assert!(args.contains_profile);
+    }
+
+    #[test]
+    fn parse_cargo_args_respect_user_args() {
+        let args = parse_cargo_args(vec![
+            "-v".to_string(),
+            "--".to_string(),
+            "--release".to_string(),
+            "--profile".to_string(),
+            "dev".to_string(),
+        ]);
+        assert_eq!(
+            args.filtered,
+            vec![
+                "-v".to_string(),
+                "--".to_string(),
+                "--release".to_string(),
+                "--profile".to_string(),
+                "dev".to_string()
+            ]
+        );
+        assert!(!args.contains_profile);
+    }
+
+    #[test]
     fn get_key_value_wrong_key() {
         assert_eq!(
             get_key_value("--foo", "--bar", &mut std::iter::empty()),
