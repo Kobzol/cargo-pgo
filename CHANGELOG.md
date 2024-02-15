@@ -1,3 +1,7 @@
+# Dev
+## Fixes
+- Respect the `--profile` cargo argument.
+
 # 0.2.5 (31. 12. 2023)
 ## Fixes
 - Respect the `--target-dir` cargo argument and improve parsing of cargo arguments in general.
