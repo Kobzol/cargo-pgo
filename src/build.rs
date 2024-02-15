@@ -141,6 +141,12 @@ pub fn parse_cargo_args(cargo_args: Vec<String>) -> CargoArgs {
     let mut iterator = cargo_args.into_iter();
     while let Some(arg) = iterator.next() {
         match arg.as_str() {
+            "--" => {
+                // After this, the user program arguments start, we should ignore these
+                args.filtered.push("--".to_string());
+                args.filtered.extend(iterator);
+                break;
+            }
             // Skip `--release`, we will pass it by ourselves.
             "--release" => {
                 log::warn!("Do not pass `--release` manually, it will be added automatically by `cargo-pgo`");

@@ -245,3 +245,22 @@ fn test_respect_profile() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_respect_user_arg() -> anyhow::Result<()> {
+    let mut project = init_cargo_project()?;
+    project.file(
+        "src/main.rs",
+        r#"
+fn main() {
+    assert_eq!(std::env::args().skip(1).next().unwrap(), "--release".to_string());
+}
+"#,
+    );
+
+    project
+        .run(&["run", "--", "-v", "--", "--release"])?
+        .assert_ok();
+
+    Ok(())
+}
