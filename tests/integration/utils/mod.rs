@@ -25,6 +25,7 @@ impl CargoProject {
         command.current_dir(&self.dir);
         command.stdin(Stdio::piped());
         command.stdout(Stdio::piped());
+        command.stderr(Stdio::piped());
 
         let path = std::env::var("PATH").unwrap_or_default();
         let path = format!("{}:{}", cargo_pgo_target_dir().display(), path);

@@ -229,3 +229,19 @@ fn test_respect_target_dir() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_respect_profile() -> anyhow::Result<()> {
+    if !version_check::is_min_version("1.57.0").unwrap_or(false) {
+        println!("Skipping test_respect_profile because of too old rustc");
+        return Ok(());
+    }
+
+    let project = init_cargo_project()?;
+
+    project
+        .run(&["build", "--", "--profile", "dev"])?
+        .assert_ok();
+
+    Ok(())
+}
