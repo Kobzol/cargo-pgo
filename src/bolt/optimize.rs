@@ -146,6 +146,7 @@ fn optimize_binary(
         None => {
             args.extend(
                 [
+                    "--peepholes=all",
                     "-reorder-blocks=ext-tsp",
                     "-reorder-functions=hfsort",
                     "-split-functions=2",
