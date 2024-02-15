@@ -16,7 +16,7 @@ pub fn capitalize(text: &str) -> Cow<str> {
     match first {
         Some(char) if char.is_uppercase() => text.into(),
         Some(char) => {
-            let rest: String = chars.into_iter().collect();
+            let rest: String = chars.collect();
             format!("{}{}", char.to_uppercase(), rest).into()
         }
         None => text.into(),

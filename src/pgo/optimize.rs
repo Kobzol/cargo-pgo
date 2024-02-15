@@ -182,7 +182,7 @@ fn merge_profiles(
 
     // Merge profiles
     let mut command = Command::new(&pgo_env.llvm_profdata);
-    command.args(&["merge", "-o", &profile_tmp_path.display().to_string()]);
+    command.args(["merge", "-o", &profile_tmp_path.display().to_string()]);
     for file in &stats.profile_files {
         command.arg(file);
     }

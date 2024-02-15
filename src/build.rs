@@ -95,7 +95,7 @@ fn cargo_command(
     let parsed_args = parse_cargo_args(cargo_args);
 
     let mut command = Command::new("cargo");
-    command.args(&[
+    command.args([
         cargo_cmd.to_str(),
         "--message-format",
         "json-diagnostic-rendered-ansi",
@@ -122,7 +122,7 @@ fn cargo_command(
                 error
             )
         })?;
-        command.args(&["--target", &default_target]);
+        command.args(["--target", &default_target]);
     }
 
     for arg in parsed_args.filtered {
