@@ -280,8 +280,13 @@ fn test_respect_existing_rustflags() -> anyhow::Result<()> {
     Ok(())
 }
 
+/// This only works for Rust 1.63+.
 #[test]
 fn test_respect_existing_rustflags_from_config() -> anyhow::Result<()> {
+    if !version_check::is_min_version("1.63.0").unwrap_or(false) {
+        return Ok(());
+    }
+
     let mut project = init_cargo_project()?;
     project.file(
         ".cargo/config.toml",

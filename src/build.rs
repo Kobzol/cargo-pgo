@@ -71,27 +71,39 @@ pub fn cargo_command_with_rustflags(
     // We have to handle RUSTFLAGS in a special way, to make sure that we don't override users
     // values from .cargo/config.toml.
 
-    // If RUSTFLAGS was defined explicitly, we want to append to it. These RUSTFLAGS will override
-    // everything else, so we don't need to care about .cargo/config.toml, but we have to add ourselves
-    // to it, so that we do use the PGO flags
-    if let Ok(mut existing_rustflags) = std::env::var("RUSTFLAGS") {
-        write!(&mut existing_rustflags, " {}", rustflags.join(" "))?;
-        env.insert("RUSTFLAGS".to_string(), existing_rustflags);
-    } else {
-        // If there's no RUSTFLAGS, the user might have some flags in their config.toml file(s).
-        // So we will use --config build.rustflags instead, to append to it instead of overwriting
-        // it.
-        cargo_args.push("--config".to_string());
+    // The `--config` flag is only supported in Rust 1.63+.
+    let supports_config_flag = version_check::is_min_version("1.63.0").unwrap_or(false);
+    let serialized_rustflags = rustflags.join(" ");
 
-        let mut flags = String::from("build.rustflags=[");
-        for (index, flag) in rustflags.into_iter().enumerate() {
-            if index > 0 {
-                flags.push(',');
-            }
-            flags.push_str(&format!("'{}'", flag));
+    match (supports_config_flag, std::env::var("RUSTFLAGS")) {
+        (_, Ok(mut existing_rustflags)) => {
+            // If RUSTFLAGS was defined explicitly, we want to append to it. These RUSTFLAGS will
+            // override everything else, so we don't need to care about .cargo/config.toml, but we
+            // have to add ourselves to it, so that we do use the PGO flags
+            write!(&mut existing_rustflags, " {}", serialized_rustflags)?;
+            env.insert("RUSTFLAGS".to_string(), existing_rustflags);
         }
-        flags.push(']');
-        cargo_args.push(flags);
+        (false, _) => {
+            // If there's no RUSTFLAGS, and Cargo doesn't support `--config` yet, just use
+            // RUSTFLAGS.
+            env.insert("RUSTFLAGS".to_string(), serialized_rustflags);
+        }
+        (true, _) => {
+            // If there's no RUSTFLAGS, and Cargo supports `--config`, use it.
+            // The user might have some flags in their config.toml file(s), and
+            // `--config build.rustflags` will append to it instead of overwriting it.
+            cargo_args.push("--config".to_string());
+
+            let mut flags = String::from("build.rustflags=[");
+            for (index, flag) in rustflags.into_iter().enumerate() {
+                if index > 0 {
+                    flags.push(',');
+                }
+                flags.push_str(&format!("'{}'", flag));
+            }
+            flags.push(']');
+            cargo_args.push(flags);
+        }
     }
 
     let release_mode = match command {
