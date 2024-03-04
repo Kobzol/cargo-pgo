@@ -264,3 +264,38 @@ fn main() {
 
     Ok(())
 }
+
+#[test]
+fn test_respect_existing_rustflags() -> anyhow::Result<()> {
+    let project = init_cargo_project()?;
+
+    let output = project
+        .cmd(&["build", "--", "-v"])
+        .env("RUSTFLAGS", "-Ctarget-cpu=native")
+        .run()?;
+    assert!(output.stderr().contains("-Ctarget-cpu=native"));
+    assert!(output.stderr().contains("-Cprofile-generate"));
+    output.assert_ok();
+
+    Ok(())
+}
+
+#[test]
+fn test_respect_existing_rustflags_from_config() -> anyhow::Result<()> {
+    let mut project = init_cargo_project()?;
+    project.file(
+        ".cargo/config.toml",
+        r#"
+[build]
+rustflags = ["-Ctarget-cpu=native"]
+"#,
+    );
+
+    let output = project.cmd(&["build", "--", "-v"]).run()?;
+    println!("{}", output.stderr());
+    assert!(output.stderr().contains("-Ctarget-cpu=native"));
+    assert!(output.stderr().contains("-Cprofile-generate"));
+    output.assert_ok();
+
+    Ok(())
+}

@@ -12,7 +12,7 @@ use regex::Regex;
 use rustc_demangle::{demangle, Demangle};
 
 use crate::build::{
-    cargo_command_with_flags, get_artifact_kind, handle_metadata_message, CargoCommand,
+    cargo_command_with_rustflags, get_artifact_kind, handle_metadata_message, CargoCommand,
 };
 use crate::cli::cli_format_path;
 use crate::pgo::env::{find_pgo_env, PgoEnv};
@@ -37,17 +37,20 @@ impl PgoOptimizeArgs {
 }
 
 /// Merges PGO profiles and creates RUSTFLAGS that use them.
-pub fn prepare_pgo_optimization_flags(pgo_env: &PgoEnv, pgo_dir: &Path) -> anyhow::Result<String> {
+pub fn prepare_pgo_optimization_flags(
+    pgo_env: &PgoEnv,
+    pgo_dir: &Path,
+) -> anyhow::Result<Vec<String>> {
     let stats = gather_pgo_profile_stats(pgo_dir)?;
 
     print_pgo_profile_stats(&stats, pgo_dir)?;
 
     let target_file = merge_profiles(pgo_env, &stats, pgo_dir)?;
 
-    Ok(format!(
-        "-Cprofile-use={} -Cllvm-args=-pgo-warn-missing-function",
-        target_file.display()
-    ))
+    Ok(vec![
+        format!("-Cprofile-use={}", target_file.display()),
+        "-Cllvm-args=-pgo-warn-missing-function".to_string(),
+    ])
 }
 
 pub fn pgo_optimize(ctx: CargoContext, args: PgoOptimizeArgs) -> anyhow::Result<()> {
@@ -56,7 +59,7 @@ pub fn pgo_optimize(ctx: CargoContext, args: PgoOptimizeArgs) -> anyhow::Result<
 
     let flags = prepare_pgo_optimization_flags(&pgo_env, &pgo_dir)?;
 
-    let mut cargo = cargo_command_with_flags(args.command, &flags, args.cargo_args)?;
+    let mut cargo = cargo_command_with_rustflags(args.command, flags, args.cargo_args)?;
 
     let mut counter = MissingProfileCounter::default();
     for message in cargo.messages() {

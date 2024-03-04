@@ -1,5 +1,5 @@
 use crate::build::{
-    cargo_command_with_flags, get_artifact_kind, handle_metadata_message, CargoCommand,
+    cargo_command_with_rustflags, get_artifact_kind, handle_metadata_message, CargoCommand,
 };
 use crate::clear_directory;
 use crate::cli::cli_format_path;
@@ -73,8 +73,8 @@ pub fn pgo_instrument(ctx: CargoContext, args: PgoInstrumentArgs) -> anyhow::Res
         cli_format_path(pgo_dir.display())
     );
 
-    let flags = format!("-Cprofile-generate={}", pgo_dir.display());
-    let mut cargo = cargo_command_with_flags(args.command, &flags, args.cargo_args)?;
+    let flags = vec![format!("-Cprofile-generate={}", pgo_dir.display())];
+    let mut cargo = cargo_command_with_rustflags(args.command, flags, args.cargo_args)?;
 
     for message in cargo.messages() {
         let message = message?;

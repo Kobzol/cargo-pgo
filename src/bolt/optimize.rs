@@ -11,7 +11,7 @@ use crate::bolt::cli::{add_bolt_args, BoltArgs};
 use crate::bolt::env::{find_bolt_env, BoltEnv};
 use crate::bolt::{bolt_pgo_rustflags, get_binary_profile_dir};
 use crate::build::{
-    cargo_command_with_flags, get_artifact_kind, handle_metadata_message, CargoCommand,
+    cargo_command_with_rustflags, get_artifact_kind, handle_metadata_message, CargoCommand,
 };
 use crate::cli::cli_format_path;
 use crate::run_command;
@@ -43,7 +43,7 @@ pub fn bolt_optimize(ctx: CargoContext, args: BoltOptimizeArgs) -> anyhow::Resul
     let bolt_env = find_bolt_env()?;
 
     let flags = bolt_pgo_rustflags(&ctx, args.with_pgo)?;
-    let mut cargo = cargo_command_with_flags(CargoCommand::Build, &flags, args.cargo_args)?;
+    let mut cargo = cargo_command_with_rustflags(CargoCommand::Build, flags, args.cargo_args)?;
 
     for message in cargo.messages() {
         let message = message?;
