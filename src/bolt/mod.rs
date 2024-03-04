@@ -12,19 +12,20 @@ pub fn llvm_bolt_install_hint() -> &'static str {
     "Build LLVM with BOLT and add its `bin` directory to PATH."
 }
 
-fn bolt_common_rustflags() -> &'static str {
-    "-C link-args=-Wl,-q"
+fn bolt_common_rustflags() -> Vec<String> {
+    vec!["-Clink-args=-Wl,-q".to_string()]
 }
 
-fn bolt_pgo_rustflags(ctx: &CargoContext, with_pgo: bool) -> anyhow::Result<String> {
+fn bolt_pgo_rustflags(ctx: &CargoContext, with_pgo: bool) -> anyhow::Result<Vec<String>> {
     let flags = match with_pgo {
         true => {
             let pgo_env = get_pgo_env()?;
             let pgo_dir = ctx.get_pgo_directory()?;
-            let flags = prepare_pgo_optimization_flags(&pgo_env, &pgo_dir)?;
-            format!("{} {}", flags, bolt_common_rustflags())
+            let mut flags = prepare_pgo_optimization_flags(&pgo_env, &pgo_dir)?;
+            flags.extend(bolt_common_rustflags());
+            flags
         }
-        false => bolt_common_rustflags().to_string(),
+        false => bolt_common_rustflags(),
     };
     Ok(flags)
 }

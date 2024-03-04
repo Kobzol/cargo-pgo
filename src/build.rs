@@ -61,16 +61,38 @@ impl RunningCargo {
 }
 
 /// Start a `cargo` command in release mode with the provided RUSTFLAGS and Cargo arguments.
-pub fn cargo_command_with_flags(
+pub fn cargo_command_with_rustflags(
     command: CargoCommand,
-    flags: &str,
-    cargo_args: Vec<String>,
+    rustflags: Vec<String>,
+    mut cargo_args: Vec<String>,
 ) -> anyhow::Result<RunningCargo> {
-    let mut rustflags = std::env::var("RUSTFLAGS").unwrap_or_default();
-    write!(&mut rustflags, " {}", flags).unwrap();
-
     let mut env = HashMap::default();
-    env.insert("RUSTFLAGS".to_string(), rustflags);
+
+    // We have to handle RUSTFLAGS in a special way, to make sure that we don't override users
+    // values from .cargo/config.toml.
+
+    // If RUSTFLAGS was defined explicitly, we want to append to it. These RUSTFLAGS will override
+    // everything else, so we don't need to care about .cargo/config.toml, but we have to add ourselves
+    // to it, so that we do use the PGO flags
+    if let Ok(mut existing_rustflags) = std::env::var("RUSTFLAGS") {
+        write!(&mut existing_rustflags, " {}", rustflags.join(" "))?;
+        env.insert("RUSTFLAGS".to_string(), existing_rustflags);
+    } else {
+        // If there's no RUSTFLAGS, the user might have some flags in their config.toml file(s).
+        // So we will use --config build.rustflags instead, to append to it instead of overwriting
+        // it.
+        cargo_args.push("--config".to_string());
+
+        let mut flags = String::from("build.rustflags=[");
+        for (index, flag) in rustflags.into_iter().enumerate() {
+            if index > 0 {
+                flags.push(',');
+            }
+            flags.push_str(&format!("'{}'", flag));
+        }
+        flags.push(']');
+        cargo_args.push(flags);
+    }
 
     let release_mode = match command {
         CargoCommand::Bench => ReleaseMode::NoRelease,
