@@ -10,7 +10,8 @@ and [BOLT](https://github.com/llvm/llvm-project/tree/main/bolt) to optimize Rust
 
 For an example on how to use `cargo-pgo` to optimize a binary on GitHub Actions CI, see [this workflow](ci/pgo.yml).
 
-# Installation
+## Installation
+
 ```bash
 $ cargo install cargo-pgo
 ```
@@ -24,10 +25,22 @@ with `rustup`:
 $ rustup component add llvm-tools-preview
 ```
 
-For BOLT, it's unfortunately more complicated. See [below](#bolt-installation) for BOLT installation
-guide.
+For BOLT, it is highly recommended to use [Docker](#docker).
+See [below](#bolt-installation) for BOLT installation guide.
 
-> BOLT support is currently *experimental*.
+> BOLT and Docker support is currently *experimental*.
+
+## Docker
+
+`cargo-pgo` has builds deployed to Docker Hub, to run `cargo-pgo` on any system that has Docker, run this in your project directory:
+
+```bash
+docker run -v $(pwd):/workdir --rm -it kobzol/cargo-pgo
+```
+
+Then in container you can run `cargo-pgo` as you would on your system.
+
+Note that with `--rm` argument, the container will be removed after you exit.
 
 ## PGO/BOLT workflow
 It is important to understand the workflow of using feedback-directed optimizations. Put simply, it
