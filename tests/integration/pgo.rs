@@ -18,7 +18,7 @@ fn test_instrument_run_instrumented_binary() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
     project.run(&["build"])?.assert_ok();
 
-    run_command(&project.main_binary())?;
+    run_command(project.main_binary())?;
 
     assert!(!get_dir_files(&project.default_pgo_profile_dir())?.is_empty());
 
@@ -38,9 +38,9 @@ fn test_build_optimize() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
 
     project.run(&["build"])?.assert_ok();
-    run_command(&project.main_binary())?;
+    run_command(project.main_binary())?;
     project.run(&["optimize"])?.assert_ok();
-    run_command(&project.main_binary())?;
+    run_command(project.main_binary())?;
 
     Ok(())
 }
@@ -76,7 +76,7 @@ mod tests {
 
     project.run(&["test"])?.assert_ok();
     project.run(&["optimize"])?.assert_ok();
-    run_command(&project.main_binary())?;
+    run_command(project.main_binary())?;
 
     Ok(())
 }
@@ -86,7 +86,7 @@ fn test_run_optimize() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
     project.run(&["run"])?.assert_ok();
     project.run(&["optimize"])?.assert_ok();
-    run_command(&project.main_binary())?;
+    run_command(project.main_binary())?;
 
     Ok(())
 }
@@ -96,7 +96,7 @@ fn test_bench_optimize() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
     project.run(&["bench"])?.assert_ok();
     project.run(&["optimize"])?.assert_ok();
-    run_command(&project.main_binary())?;
+    run_command(project.main_binary())?;
 
     Ok(())
 }
@@ -106,9 +106,9 @@ fn test_instrument_optimize() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
 
     project.run(&["instrument"])?.assert_ok();
-    run_command(&project.main_binary())?;
+    run_command(project.main_binary())?;
     project.run(&["optimize"])?.assert_ok();
-    run_command(&project.main_binary())?;
+    run_command(project.main_binary())?;
 
     Ok(())
 }
@@ -118,9 +118,9 @@ fn test_instrument_build() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
 
     project.run(&["instrument", "build"])?.assert_ok();
-    run_command(&project.main_binary())?;
+    run_command(project.main_binary())?;
     project.run(&["optimize"])?.assert_ok();
-    run_command(&project.main_binary())?;
+    run_command(project.main_binary())?;
 
     Ok(())
 }
@@ -156,7 +156,7 @@ mod tests {
 
     project.run(&["instrument", "test"])?.assert_ok();
     project.run(&["optimize"])?.assert_ok();
-    run_command(&project.main_binary())?;
+    run_command(project.main_binary())?;
 
     Ok(())
 }
@@ -166,7 +166,7 @@ fn test_instrument_run() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
     project.run(&["instrument", "run"])?.assert_ok();
     project.run(&["optimize"])?.assert_ok();
-    run_command(&project.main_binary())?;
+    run_command(project.main_binary())?;
 
     Ok(())
 }
@@ -176,7 +176,7 @@ fn test_instrument_bench() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
     project.run(&["instrument", "bench"])?.assert_ok();
     project.run(&["optimize"])?.assert_ok();
-    run_command(&project.main_binary())?;
+    run_command(project.main_binary())?;
 
     Ok(())
 }

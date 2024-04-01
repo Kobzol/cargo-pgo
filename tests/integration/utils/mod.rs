@@ -204,7 +204,7 @@ pub fn init_cargo_project() -> anyhow::Result<CargoProject> {
 
     let name = "foo";
     let status = Command::new("cargo")
-        .args(&["new", "--bin", name])
+        .args(["new", "--bin", name])
         .current_dir(dir.path())
         .status()?;
     assert!(status.success());

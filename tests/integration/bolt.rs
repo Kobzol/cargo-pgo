@@ -42,9 +42,9 @@ fn test_bolt_optimize() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
 
     project.run(&["bolt", "build"])?.assert_ok();
-    run_command(&project.bolt_instrumented_binary())?;
+    run_command(project.bolt_instrumented_binary())?;
     project.run(&["bolt", "optimize"])?.assert_ok();
-    run_command(&project.bolt_optimized_binary())?;
+    run_command(project.bolt_optimized_binary())?;
 
     Ok(())
 }
@@ -55,15 +55,15 @@ fn test_bolt_pgo_optimize() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
 
     project.run(&["build"])?.assert_ok();
-    run_command(&project.main_binary())?;
+    run_command(project.main_binary())?;
 
     project.run(&["bolt", "build", "--with-pgo"])?.assert_ok();
-    run_command(&project.bolt_instrumented_binary())?;
+    run_command(project.bolt_instrumented_binary())?;
 
     project
         .run(&["bolt", "optimize", "--with-pgo"])?
         .assert_ok();
-    run_command(&project.bolt_optimized_binary())?;
+    run_command(project.bolt_optimized_binary())?;
 
     Ok(())
 }
@@ -134,7 +134,7 @@ fn test_bolt_optimize_bolt_args() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
 
     project.run(&["bolt", "build"])?.assert_ok();
-    run_command(&project.bolt_instrumented_binary())?;
+    run_command(project.bolt_instrumented_binary())?;
 
     project
         .run(&[
