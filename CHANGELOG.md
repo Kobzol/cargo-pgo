@@ -1,3 +1,8 @@
+# Dev
+## Fixes
+
+- Fix passing of `--config` Cargo argument when using `cargo pgo run`.
+
 # 0.2.7 (28. 3. 2024)
 ## Fixes
 
