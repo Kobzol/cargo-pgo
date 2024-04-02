@@ -8,6 +8,7 @@ RUN apt update \
     && apt-get update \
     && apt install -y \
     bolt-18 \
+    musl-tools \
     && ln -s /usr/bin/merge-fdata-18 /usr/bin/merge-fdata \
     && ln -s /usr/bin/llvm-bolt-18 /usr/bin/llvm-bolt \
     && ln -s /usr/lib/llvm-18/lib/libbolt_rt_instr.a /usr/lib/libbolt_rt_instr.a \
@@ -15,6 +16,7 @@ RUN apt update \
     && rm -rf /var/lib/apt/lists/* /etc/apt/sources.list.d/llvm-toolchain.list
 
 RUN rustup component add llvm-tools-preview \
+    && rustup target add x86_64-unknown-linux-musl \
     && cargo install cargo-pgo
 
 WORKDIR /workdir
