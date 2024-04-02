@@ -304,3 +304,24 @@ rustflags = ["-Ctarget-cpu=native"]
 
     Ok(())
 }
+
+#[test]
+fn test_run_pass_args_to_cargo() -> anyhow::Result<()> {
+    let mut project = init_cargo_project()?;
+    project.file(
+        "src/main.rs",
+        r#"
+fn main() {
+    let args = std::env::args().collect::<Vec<_>>();
+    assert_eq!(args.len(), 3);
+    assert_eq!(args[1], "arg-for-binary");
+    assert_eq!(args[2], "foo");
+}
+"#,
+    );
+    project
+        .run(&["run", "--", "-v", "--", "arg-for-binary", "foo"])?
+        .assert_ok();
+
+    Ok(())
+}

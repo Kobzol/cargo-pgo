@@ -64,7 +64,7 @@ impl RunningCargo {
 pub fn cargo_command_with_rustflags(
     command: CargoCommand,
     rustflags: Vec<String>,
-    mut cargo_args: Vec<String>,
+    cargo_args: Vec<String>,
 ) -> anyhow::Result<RunningCargo> {
     let mut env = HashMap::default();
 
@@ -74,6 +74,8 @@ pub fn cargo_command_with_rustflags(
     // The `--config` flag is only supported in Rust 1.63+.
     let supports_config_flag = version_check::is_min_version("1.63.0").unwrap_or(false);
     let serialized_rustflags = rustflags.join(" ");
+
+    let mut final_cargo_args = vec![];
 
     match (supports_config_flag, std::env::var("RUSTFLAGS")) {
         (_, Ok(mut existing_rustflags)) => {
@@ -92,7 +94,7 @@ pub fn cargo_command_with_rustflags(
             // If there's no RUSTFLAGS, and Cargo supports `--config`, use it.
             // The user might have some flags in their config.toml file(s), and
             // `--config build.rustflags` will append to it instead of overwriting it.
-            cargo_args.push("--config".to_string());
+            final_cargo_args.push("--config".to_string());
 
             let mut flags = String::from("build.rustflags=[");
             for (index, flag) in rustflags.into_iter().enumerate() {
@@ -102,7 +104,7 @@ pub fn cargo_command_with_rustflags(
                 flags.push_str(&format!("'{}'", flag));
             }
             flags.push(']');
-            cargo_args.push(flags);
+            final_cargo_args.push(flags);
         }
     }
 
@@ -111,7 +113,12 @@ pub fn cargo_command_with_rustflags(
         _ => ReleaseMode::AddRelease,
     };
 
-    let mut child = cargo_command(command, cargo_args, env, release_mode)?;
+    // We need to add any new Cargo arguments to the beginning of `cargo_args`, because it could
+    // end with `--`, in which case the added arguments would be sent to e.g. the executed binary
+    // instead.
+    final_cargo_args.extend(cargo_args);
+
+    let mut child = cargo_command(command, final_cargo_args, env, release_mode)?;
     let stdout = child.stdout.take().unwrap();
     Ok(RunningCargo {
         child,
