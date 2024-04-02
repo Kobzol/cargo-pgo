@@ -86,7 +86,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-pgo"
-version = "0.2.7"
+version = "0.2.8"
 dependencies = [
  "anyhow",
  "blake3",

@@ -1,7 +1,7 @@
-# Dev
+# 0.2.8 (28. 3. 2024)
 ## Fixes
 
-- Fix passing of `--config` Cargo argument when using `cargo pgo run`.
+- Fix passing of `--config` Cargo argument when using `cargo pgo run` (https://github.com/Kobzol/cargo-pgo/pull/54).
 
 # 0.2.7 (28. 3. 2024)
 ## Fixes
