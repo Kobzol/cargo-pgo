@@ -1,4 +1,12 @@
+FROM rust:1.76-slim AS src
+
+COPY . .
+
+RUN cargo install --path .
+
 FROM rust:1.76-slim
+
+COPY --from=src /usr/local/cargo/bin/cargo-pgo /usr/local/bin/cargo-pgo
 
 RUN apt update \
     && apt install -y wget gnupg \
@@ -16,7 +24,6 @@ RUN apt update \
     && rm -rf /var/lib/apt/lists/* /etc/apt/sources.list.d/llvm-toolchain.list
 
 RUN rustup component add llvm-tools-preview \
-    && rustup target add x86_64-unknown-linux-musl \
-    && cargo install cargo-pgo
+    && rustup target add x86_64-unknown-linux-musl
 
 WORKDIR /workdir
