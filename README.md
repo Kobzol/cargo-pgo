@@ -32,13 +32,20 @@ See [below](#bolt-installation) for BOLT installation guide.
 
 ## Docker
 
-`cargo-pgo` has builds deployed to Docker Hub, to run `cargo-pgo` on any system that has Docker, run this in your project directory:
+To use latest `cargo-pgo` with Docker, you need to build the image first:
 
 ```bash
-docker run -v $(pwd):/workdir --rm -it kobzol/cargo-pgo
+git clone https://github.com/Kobzol/cargo-pgo.git && cd cargo-pgo
+docker build -t cargo-pgo .
 ```
 
-Then in container you can run `cargo-pgo` as you would on your system.
+Then run this in your project directory to create a container:
+
+```bash
+docker run -v $(pwd):/workdir --rm -it cargo-pgo
+```
+
+In the container, you can run `cargo-pgo` as you would on your system.
 
 Note that with `--rm` argument, the container will be removed after you exit.
 
