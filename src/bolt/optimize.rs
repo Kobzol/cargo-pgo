@@ -77,7 +77,7 @@ The optimization will probably not be very effective.",
                         "{} {} successfully optimized with BOLT. You can find it at {}.",
                         capitalize(get_artifact_kind(&artifact)).yellow(),
                         artifact.target.name.blue(),
-                        cli_format_path(&optimized_path.display())
+                        cli_format_path(optimized_path.display())
                     );
                 }
             }
