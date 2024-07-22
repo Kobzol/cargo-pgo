@@ -282,7 +282,7 @@ fn test_respect_existing_rustflags() -> anyhow::Result<()> {
 
 /// This only works for Rust 1.63+.
 #[test]
-fn test_respect_existing_rustflags_from_config() -> anyhow::Result<()> {
+fn test_override_build_rustflags_from_config() -> anyhow::Result<()> {
     if !version_check::is_min_version("1.63.0").unwrap_or(false) {
         return Ok(());
     }
@@ -294,6 +294,35 @@ fn test_respect_existing_rustflags_from_config() -> anyhow::Result<()> {
 [build]
 rustflags = ["-Ctarget-cpu=native"]
 "#,
+    );
+
+    let output = project.cmd(&["build", "--", "-v"]).run()?;
+    println!("{}", output.stderr());
+    assert!(!output.stderr().contains("-Ctarget-cpu=native"));
+    assert!(output.stderr().contains("-Cprofile-generate"));
+    output.assert_ok();
+
+    Ok(())
+}
+
+#[test]
+fn test_respect_existing_target_rustflags_from_config() -> anyhow::Result<()> {
+    if !version_check::is_min_version("1.63.0").unwrap_or(false) {
+        return Ok(());
+    }
+
+    let target = get_default_target()?;
+
+    let mut project = init_cargo_project()?;
+    project.file(
+        ".cargo/config.toml",
+        &format!(
+            r#"
+[target.{}]
+rustflags = ["-Ctarget-cpu=native"]
+"#,
+            target
+        ),
     );
 
     let output = project.cmd(&["build", "--", "-v"]).run()?;
