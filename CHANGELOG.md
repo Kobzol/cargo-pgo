@@ -1,3 +1,11 @@
+# Dev
+## Changes
+
+- Use `target.rustflags` for passing PGO flags instead
+  of `build.rustflags` (https://github.com/Kobzol/cargo-pgo/issues/56).
+  This should make it less likely that PGO flags will be overridden by users' `.cargo/config.toml` files.
+  On the other hand, `cargo pgo` will now override `build.rustflags` set in `config.toml`.
+
 # 0.2.8 (28. 3. 2024)
 ## Fixes
 
