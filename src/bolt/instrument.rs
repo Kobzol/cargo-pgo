@@ -78,7 +78,7 @@ pub fn bolt_instrument(ctx: CargoContext, args: BoltInstrumentArgs) -> anyhow::R
                         "{} {} instrumented successfully. Now run {} on your workload.",
                         capitalize(get_artifact_kind(&artifact)).yellow(),
                         artifact.target.name.blue(),
-                        cli_format_path(&instrumented_path.display())
+                        cli_format_path(instrumented_path.display())
                     );
                 }
             }
