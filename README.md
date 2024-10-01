@@ -58,7 +58,7 @@ consists of three general steps:
 2) **Gather performance profiles**
     - Run your instrumented binary on representative workloads. The binary will generate profile files
     on disk which will be then used to optimize the binary.
-    - Try to gather as much data as possible. Ideally, run your binary for at least a minute or more.
+    - Try to gather as much data as possible. Ideally, exercise all the important parts of the codebase (in the coverage sense).
 3) **Build an optimized binary using generated profiles**
     - The compiler will use the generated profiles to build an optimized version of your binary.
     - The binary will be optimized with respect to the profiled workloads. If you execute it on a
