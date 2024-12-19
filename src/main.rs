@@ -20,7 +20,6 @@ enum Args {
 }
 
 #[derive(clap::Subcommand, Debug)]
-#[clap(setting(clap::AppSettings::DeriveDisplayOrder))]
 enum Subcommand {
     /// Display information about your environment. Can be used to check whether it is prepared for
     /// PGO and BOLT.
