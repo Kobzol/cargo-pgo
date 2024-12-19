@@ -19,43 +19,22 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust-version }}
-          override: true
           components: clippy, rustfmt, llvm-tools-preview
 
-      - uses: Swatinem/rust-cache@v1
-
       - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --all --all-targets
+        run: cargo build --all --all-targets
 
-      - name: Run unit tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --lib
-
-      - name: Run integration tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+      - name: Run tests
+        run: cargo test
 
       - name: Lint
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --all -- -D warnings
+        run: clippy --all -- -D warnings
 
       - name: Check Rust formatting
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all -- --check
   test-windows:
     name: Test on Windows
     runs-on: windows-latest
@@ -64,28 +43,13 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          profile: minimal
           toolchain: 1.56.1
-          override: true
-          components: llvm-tools-preview
-
-      - uses: Swatinem/rust-cache@v1
+          components: clippy, rustfmt, llvm-tools-preview
 
       - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --all --all-targets
+        run: cargo build --all --all-targets
 
-      - name: Run unit tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --lib
-
-      - name: Run integration tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+      - name: Run tests
+        run: cargo test
