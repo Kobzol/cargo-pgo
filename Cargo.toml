@@ -2,7 +2,7 @@
 name = "cargo-pgo"
 version = "0.2.8"
 edition = "2021"
-rust-version = "1.56.1"
+rust-version = "1.78.0"
 
 description = "Cargo subcommand for optimizing Rust binaries with PGO and BOLT."
 repository = "https://github.com/kobzol/cargo-pgo"
