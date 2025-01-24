@@ -2,7 +2,7 @@
 name = "cargo-pgo"
 version = "0.2.8"
 edition = "2021"
-rust-version = "1.78.0"
+rust-version = "1.80.0"
 
 description = "Cargo subcommand for optimizing Rust binaries with PGO and BOLT."
 repository = "https://github.com/kobzol/cargo-pgo"
@@ -30,9 +30,9 @@ which = "7"
 clap = { version = "4.5", features = ["derive"] }
 log = "0.4"
 env_logger = "0.11"
-colored = "2"
+colored = "3"
 cargo_metadata = "0.19"
-humansize = "1"
+humansize = "2"
 semver = "1"
 tempfile = "3.14"
 regex = "1.11"
@@ -41,7 +41,4 @@ rustc-demangle = "0.1"
 walkdir = "2.5"
 shellwords = "1.1"
 blake3 = "1.4"
-version_check = "0.9"
-
-[dev-dependencies]
 version_check = "0.9"

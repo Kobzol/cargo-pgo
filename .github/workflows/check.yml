@@ -13,16 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust-version: [ 1.78.0, stable, beta, nightly ]
+        rust-version: [ 1.80.0, stable, beta, nightly ]
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
 
-      - name: Install stable toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{ matrix.rust-version }}
-          components: clippy, rustfmt, llvm-tools-preview
+      - name: Install toolchain
+        run: |
+          rustup toolchain install ${{ matrix.rust-version }}
+          rustup default ${{ matrix.rust-version }}
+          rustup component add clippy rustfmt llvm-tools-preview
 
       - name: Build
         run: cargo build --all --all-targets
@@ -31,10 +31,11 @@ jobs:
         run: cargo test
 
       - name: Lint
-        run: clippy --all -- -D warnings
+        run: cargo clippy --all -- -D warnings
 
       - name: Check Rust formatting
         run: cargo fmt --all -- --check
+
   test-windows:
     name: Test on Windows
     runs-on: windows-latest
@@ -42,11 +43,11 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v2
 
-      - name: Install stable toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: 1.78.0
-          components: clippy, rustfmt, llvm-tools-preview
+      - name: Install toolchain
+        run: |
+          rustup toolchain install 1.80.0
+          rustup default 1.80.0
+          rustup component add clippy rustfmt llvm-tools-preview
 
       - name: Build
         run: cargo build --all --all-targets
