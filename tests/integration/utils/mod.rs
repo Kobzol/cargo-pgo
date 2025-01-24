@@ -167,6 +167,8 @@ pub trait OutputExt {
     fn assert_ok(self) -> Self;
     fn assert_error(self) -> Self;
 
+    fn assert_stderr_contains(&self, needle: &str);
+
     fn stdout(&self) -> String;
     fn stderr(&self) -> String;
 }
@@ -188,6 +190,13 @@ impl OutputExt for Output {
             panic!("Output was successful");
         }
         self
+    }
+
+    fn assert_stderr_contains(&self, needle: &str) {
+        let stderr = self.stderr();
+        if !stderr.contains(needle) {
+            panic!("STDERR\n{stderr}\nDOES NOT CONTAIN\n{needle}");
+        }
     }
 
     fn stdout(&self) -> String {

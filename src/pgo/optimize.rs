@@ -5,8 +5,7 @@ use anyhow::anyhow;
 use cargo_metadata::diagnostic::DiagnosticLevel;
 use cargo_metadata::{CompilerMessage, Message};
 use colored::Colorize;
-use humansize::file_size_opts::BINARY;
-use humansize::FileSize;
+use humansize::{format_size, BINARY};
 use once_cell::sync::OnceCell;
 use regex::Regex;
 use rustc_demangle::{demangle, Demangle};
@@ -153,7 +152,7 @@ fn print_pgo_profile_stats(stats: &ProfileStats, pgo_dir: &Path) -> anyhow::Resu
         } else {
             "file"
         },
-        stats.total_size.file_size(BINARY).unwrap().yellow(),
+        format_size(stats.total_size, BINARY).yellow(),
         cli_format_path(pgo_dir.display())
     );
     Ok(())

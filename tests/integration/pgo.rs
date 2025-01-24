@@ -326,9 +326,8 @@ rustflags = ["-Ctarget-cpu=native"]
     );
 
     let output = project.cmd(&["build", "--", "-v"]).run()?;
-    println!("{}", output.stderr());
-    assert!(output.stderr().contains("-Ctarget-cpu=native"));
-    assert!(output.stderr().contains("-Cprofile-generate"));
+    output.assert_stderr_contains("-Ctarget-cpu=native");
+    output.assert_stderr_contains("-Cprofile-generate");
     output.assert_ok();
 
     Ok(())

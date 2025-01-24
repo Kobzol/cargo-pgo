@@ -1,5 +1,5 @@
 use crate::get_default_target;
-use cargo_metadata::{Artifact, Message, MessageIter};
+use cargo_metadata::{Artifact, Message, MessageIter, TargetKind};
 use std::collections::HashMap;
 use std::fmt::Write as WriteFmt;
 use std::io::{BufReader, Write};
@@ -290,14 +290,14 @@ fn write_metadata_message<W: Write>(mut stream: W, message: Message) {
 /// Returns a user-friendly name of an artifact kind.
 pub fn get_artifact_kind(artifact: &Artifact) -> &str {
     for kind in &artifact.target.kind {
-        match kind.as_str() {
-            "bin" => {
+        match kind {
+            TargetKind::Bin => {
                 return "binary";
             }
-            "bench" => {
+            TargetKind::Bench => {
                 return "benchmark";
             }
-            "example" => {
+            TargetKind::Example => {
                 return "example";
             }
             _ => {}

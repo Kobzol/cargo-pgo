@@ -13,49 +13,29 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust-version: [ 1.56.1, stable, beta, nightly ]
+        rust-version: [ 1.80.0, stable, beta, nightly ]
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
 
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ matrix.rust-version }}
-          override: true
-          components: clippy, rustfmt, llvm-tools-preview
-
-      - uses: Swatinem/rust-cache@v1
+      - name: Install toolchain
+        run: |
+          rustup toolchain install ${{ matrix.rust-version }}
+          rustup default ${{ matrix.rust-version }}
+          rustup component add clippy rustfmt llvm-tools-preview
 
       - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --all --all-targets
+        run: cargo build --all --all-targets
 
-      - name: Run unit tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --lib
-
-      - name: Run integration tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+      - name: Run tests
+        run: cargo test
 
       - name: Lint
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --all -- -D warnings
+        run: cargo clippy --all -- -D warnings
 
       - name: Check Rust formatting
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+        run: cargo fmt --all -- --check
+
   test-windows:
     name: Test on Windows
     runs-on: windows-latest
@@ -63,29 +43,14 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v2
 
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: 1.56.1
-          override: true
-          components: llvm-tools-preview
-
-      - uses: Swatinem/rust-cache@v1
+      - name: Install toolchain
+        run: |
+          rustup toolchain install 1.80.0
+          rustup default 1.80.0
+          rustup component add clippy rustfmt llvm-tools-preview
 
       - name: Build
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --all --all-targets
+        run: cargo build --all --all-targets
 
-      - name: Run unit tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --lib
-
-      - name: Run integration tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+      - name: Run tests
+        run: cargo test

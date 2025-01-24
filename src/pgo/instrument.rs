@@ -15,7 +15,7 @@ pub struct PgoInstrumentArgs {
     command: CargoCommand,
 
     /// Do not remove profiles that were gathered during previous runs.
-    #[clap(long, takes_value = false)]
+    #[clap(long, action)]
     keep_profiles: bool,
 
     /// Additional arguments that will be passed to the executed `cargo` command.
@@ -32,7 +32,7 @@ impl PgoInstrumentArgs {
 #[clap(trailing_var_arg(true))]
 pub struct PgoInstrumentShortcutArgs {
     /// Do not remove profiles that were gathered during previous runs.
-    #[clap(long, takes_value = false)]
+    #[clap(long, action)]
     keep_profiles: bool,
 
     /// Additional arguments that will be passed to the executed `cargo` command.

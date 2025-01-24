@@ -25,7 +25,7 @@ pub struct BoltInstrumentArgs {
     with_pgo: bool,
 
     /// Do not remove profiles that were gathered during previous runs.
-    #[clap(long, takes_value = false)]
+    #[clap(long, action)]
     keep_profiles: bool,
 
     #[clap(flatten)]
