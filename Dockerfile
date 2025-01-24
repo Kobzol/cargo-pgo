@@ -1,10 +1,10 @@
-FROM rust:1.76-slim AS src
+FROM rust:1.80-slim AS src
 
 COPY . .
 
 RUN cargo install --path .
 
-FROM rust:1.76-slim
+FROM rust:1.80-slim
 
 COPY --from=src /usr/local/cargo/bin/cargo-pgo /usr/local/bin/cargo-pgo
 
