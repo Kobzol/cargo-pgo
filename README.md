@@ -228,6 +228,9 @@ Here's a short guide how to compile LLVM with BOLT manually. You will need a rec
     The built files should be located at `<llvm-dir>/llvm-install/bin`. You should add this directory
     to `$PATH` to make BOLT usable with `cargo-pgo`.
 
+## Caveats
+- `cargo-pgo` needs to set RUSTFLAGS for the crate being compiled. If you pass your own RUSTFLAGS using `config.toml` file, please make sure to use the `[target.<...>] rustflags = ...` section, instead of the `[build] rustflags = ...` section. With `target`, your flags will be combined with the PGO flags. If you use `build`, your flags will be overridden instead. See [#49](https://github.com/Kobzol/cargo-pgo/issues/49) for more context.
+
 # Related work
 - [cargo-pgo](https://github.com/vadimcn/cargo-pgo) I basically independently reimplemented this
 crate. It uses an almost identical approach, but doesn't support BOLT. It's not maintained
