@@ -128,7 +128,6 @@ dependencies = [
  "env_logger",
  "humansize",
  "log",
- "once_cell",
  "regex",
  "rustc-demangle",
  "semver",
