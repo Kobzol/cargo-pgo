@@ -1,12 +1,12 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::OnceLock;
 
 use anyhow::anyhow;
 use cargo_metadata::diagnostic::DiagnosticLevel;
 use cargo_metadata::{CompilerMessage, Message};
 use colored::Colorize;
 use humansize::{format_size, BINARY};
-use once_cell::sync::OnceCell;
 use regex::Regex;
 use rustc_demangle::{demangle, Demangle};
 
@@ -231,7 +231,7 @@ impl MissingProfileCounter {
 }
 
 fn get_pgo_missing_profile(message: &CompilerMessage) -> Option<PgoMissingProfile> {
-    static REGEX: OnceCell<Regex> = OnceCell::new();
+    static REGEX: OnceLock<Regex> = OnceLock::new();
 
     let regex = REGEX.get_or_init(|| {
         Regex::new("^(?P<module>.*): no profile data available for function (?P<function>.*?) .*$")
