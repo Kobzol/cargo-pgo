@@ -1,5 +1,6 @@
 use crate::utils::{get_dir_files, init_cargo_project, run_command};
 use cargo_pgo::get_default_target;
+use tempfile::TempDir;
 
 use crate::utils::OutputExt;
 
@@ -350,6 +351,29 @@ fn main() {
     project
         .run(&["run", "--", "-v", "--", "arg-for-binary", "foo"])?
         .assert_ok();
+
+    Ok(())
+}
+
+#[test]
+fn test_change_profile_directory() -> anyhow::Result<()> {
+    let project = init_cargo_project()?;
+    let temp_dir = TempDir::new()?;
+    let pgo_path = temp_dir.path().display().to_string();
+
+    project
+        .run(&[
+            "instrument",
+            "build",
+            "--override-pgo-path",
+            pgo_path.as_str(),
+        ])?
+        .assert_ok();
+    run_command(project.main_binary())?;
+    project
+        .run(&["optimize", "--override-pgo-path", pgo_path.as_str()])?
+        .assert_ok();
+    run_command(project.main_binary())?;
 
     Ok(())
 }

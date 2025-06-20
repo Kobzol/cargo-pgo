@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use crate::build::{
     cargo_command_with_rustflags, get_artifact_kind, handle_metadata_message, CargoCommand,
 };
@@ -18,6 +20,10 @@ pub struct PgoInstrumentArgs {
     #[clap(long, action)]
     keep_profiles: bool,
 
+    /// Override the PGO profile path.
+    #[clap(long)]
+    override_pgo_path: Option<PathBuf>,
+
     /// Additional arguments that will be passed to the executed `cargo` command.
     cargo_args: Vec<String>,
 }
@@ -25,6 +31,10 @@ pub struct PgoInstrumentArgs {
 impl PgoInstrumentArgs {
     pub fn cargo_args(&self) -> &[String] {
         &self.cargo_args
+    }
+
+    pub fn override_pgo_path(&self) -> &Option<PathBuf> {
+        &self.override_pgo_path
     }
 }
 
@@ -35,6 +45,10 @@ pub struct PgoInstrumentShortcutArgs {
     #[clap(long, action)]
     keep_profiles: bool,
 
+    /// Override the PGO profile path.
+    #[clap(long)]
+    override_pgo_path: Option<PathBuf>,
+
     /// Additional arguments that will be passed to the executed `cargo` command.
     cargo_args: Vec<String>,
 }
@@ -43,18 +57,24 @@ impl PgoInstrumentShortcutArgs {
     pub fn cargo_args(&self) -> &[String] {
         &self.cargo_args
     }
+
+    pub fn override_pgo_path(&self) -> &Option<PathBuf> {
+        &self.override_pgo_path
+    }
 }
 
 impl PgoInstrumentShortcutArgs {
     pub fn into_full_args(self, command: CargoCommand) -> PgoInstrumentArgs {
         let PgoInstrumentShortcutArgs {
             keep_profiles,
+            override_pgo_path,
             cargo_args,
         } = self;
 
         PgoInstrumentArgs {
             command,
             keep_profiles,
+            override_pgo_path,
             cargo_args,
         }
     }

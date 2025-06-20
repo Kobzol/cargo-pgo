@@ -4,11 +4,16 @@ use std::path::{Path, PathBuf};
 
 pub struct CargoContext {
     target_directory: PathBuf,
+    override_pgo_path: Option<PathBuf>,
 }
 
 impl CargoContext {
     pub fn get_pgo_directory(&self) -> anyhow::Result<PathBuf> {
-        self.get_target_directory(Path::new("pgo-profiles"))
+        if let Some(override_pgo_path) = &self.override_pgo_path {
+            Ok(override_pgo_path.clone())
+        } else {
+            self.get_target_directory(Path::new("pgo-profiles"))
+        }
     }
 
     pub fn get_bolt_directory(&self) -> anyhow::Result<PathBuf> {
@@ -23,7 +28,10 @@ impl CargoContext {
 }
 
 /// Finds Cargo metadata from the current directory.
-pub fn get_cargo_ctx(cargo_args: &[String]) -> anyhow::Result<CargoContext> {
+pub fn get_cargo_ctx(
+    cargo_args: &[String],
+    override_pgo_path: Option<PathBuf>,
+) -> anyhow::Result<CargoContext> {
     let cargo_args = parse_cargo_args(cargo_args.to_vec());
     let target_directory = match cargo_args.target_dir {
         Some(dir) => dir,
@@ -36,5 +44,8 @@ pub fn get_cargo_ctx(cargo_args: &[String]) -> anyhow::Result<CargoContext> {
         }
     };
 
-    Ok(CargoContext { target_directory })
+    Ok(CargoContext {
+        target_directory,
+        override_pgo_path,
+    })
 }

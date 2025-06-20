@@ -26,12 +26,22 @@ pub struct PgoOptimizeArgs {
     /// Cargo command that will be used for PGO-optimized compilation.
     #[clap(value_enum, default_value = "build")]
     command: CargoCommand,
+
+    /// Override the PGO profile path.
+    #[clap(long)]
+    override_pgo_path: Option<PathBuf>,
+
+    /// Additional arguments that will be passed to the executed `cargo` command.
     cargo_args: Vec<String>,
 }
 
 impl PgoOptimizeArgs {
     pub fn cargo_args(&self) -> &[String] {
         &self.cargo_args
+    }
+
+    pub fn override_pgo_path(&self) -> &Option<PathBuf> {
+        &self.override_pgo_path
     }
 }
 
