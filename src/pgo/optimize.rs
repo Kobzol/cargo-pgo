@@ -29,7 +29,7 @@ pub struct PgoOptimizeArgs {
 
     /// Override the PGO profile path.
     #[clap(long)]
-    override_pgo_path: Option<PathBuf>,
+    profiles_dir: Option<PathBuf>,
 
     /// Additional arguments that will be passed to the executed `cargo` command.
     cargo_args: Vec<String>,
@@ -40,8 +40,8 @@ impl PgoOptimizeArgs {
         &self.cargo_args
     }
 
-    pub fn override_pgo_path(&self) -> &Option<PathBuf> {
-        &self.override_pgo_path
+    pub fn profiles_dir(&self) -> &Option<PathBuf> {
+        &self.profiles_dir
     }
 }
 

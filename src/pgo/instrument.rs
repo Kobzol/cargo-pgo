@@ -22,7 +22,7 @@ pub struct PgoInstrumentArgs {
 
     /// Override the PGO profile path.
     #[clap(long)]
-    override_pgo_path: Option<PathBuf>,
+    profiles_dir: Option<PathBuf>,
 
     /// Additional arguments that will be passed to the executed `cargo` command.
     cargo_args: Vec<String>,
@@ -33,8 +33,8 @@ impl PgoInstrumentArgs {
         &self.cargo_args
     }
 
-    pub fn override_pgo_path(&self) -> &Option<PathBuf> {
-        &self.override_pgo_path
+    pub fn profiles_dir(&self) -> &Option<PathBuf> {
+        &self.profiles_dir
     }
 }
 
@@ -47,7 +47,7 @@ pub struct PgoInstrumentShortcutArgs {
 
     /// Override the PGO profile path.
     #[clap(long)]
-    override_pgo_path: Option<PathBuf>,
+    profiles_dir: Option<PathBuf>,
 
     /// Additional arguments that will be passed to the executed `cargo` command.
     cargo_args: Vec<String>,
@@ -58,8 +58,8 @@ impl PgoInstrumentShortcutArgs {
         &self.cargo_args
     }
 
-    pub fn override_pgo_path(&self) -> &Option<PathBuf> {
-        &self.override_pgo_path
+    pub fn profiles_dir(&self) -> &Option<PathBuf> {
+        &self.profiles_dir
     }
 }
 
@@ -67,14 +67,14 @@ impl PgoInstrumentShortcutArgs {
     pub fn into_full_args(self, command: CargoCommand) -> PgoInstrumentArgs {
         let PgoInstrumentShortcutArgs {
             keep_profiles,
-            override_pgo_path,
+            profiles_dir,
             cargo_args,
         } = self;
 
         PgoInstrumentArgs {
             command,
             keep_profiles,
-            override_pgo_path,
+            profiles_dir,
             cargo_args,
         }
     }

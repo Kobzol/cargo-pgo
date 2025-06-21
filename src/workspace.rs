@@ -4,13 +4,13 @@ use std::path::{Path, PathBuf};
 
 pub struct CargoContext {
     target_directory: PathBuf,
-    override_pgo_path: Option<PathBuf>,
+    profiles_dir: Option<PathBuf>,
 }
 
 impl CargoContext {
     pub fn get_pgo_directory(&self) -> anyhow::Result<PathBuf> {
-        if let Some(override_pgo_path) = &self.override_pgo_path {
-            Ok(override_pgo_path.clone())
+        if let Some(profiles_dir) = &self.profiles_dir {
+            Ok(profiles_dir.clone())
         } else {
             self.get_target_directory(Path::new("pgo-profiles"))
         }
@@ -30,7 +30,7 @@ impl CargoContext {
 /// Finds Cargo metadata from the current directory.
 pub fn get_cargo_ctx(
     cargo_args: &[String],
-    override_pgo_path: Option<PathBuf>,
+    profiles_dir: Option<PathBuf>,
 ) -> anyhow::Result<CargoContext> {
     let cargo_args = parse_cargo_args(cargo_args.to_vec());
     let target_directory = match cargo_args.target_dir {
@@ -46,6 +46,6 @@ pub fn get_cargo_ctx(
 
     Ok(CargoContext {
         target_directory,
-        override_pgo_path,
+        profiles_dir,
     })
 }

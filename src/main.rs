@@ -73,7 +73,7 @@ impl BoltArgs {
 struct CleanArgs {
     /// Override the PGO profile directory.
     #[clap(long)]
-    override_pgo_directory: Option<PathBuf>,
+    profiles_dir: Option<PathBuf>,
 }
 
 impl Args {
@@ -93,20 +93,18 @@ impl Args {
         }
     }
 
-    fn override_pgo_path(&self) -> Option<PathBuf> {
+    fn profiles_dir(&self) -> Option<PathBuf> {
         match self {
             Args::Pgo(args) => match args {
                 Subcommand::Info => None,
-                Subcommand::Instrument(args) => args.override_pgo_path().to_owned(),
+                Subcommand::Instrument(args) => args.profiles_dir().to_owned(),
                 Subcommand::Build(args)
                 | Subcommand::Run(args)
                 | Subcommand::Test(args)
-                | Subcommand::Bench(args) => args.override_pgo_path().to_owned(),
-                Subcommand::Optimize(args) => args.override_pgo_path().to_owned(),
+                | Subcommand::Bench(args) => args.profiles_dir().to_owned(),
+                Subcommand::Optimize(args) => args.profiles_dir().to_owned(),
                 Subcommand::Bolt(..) => None,
-                Subcommand::Clean(CleanArgs {
-                    override_pgo_directory,
-                }) => override_pgo_directory.to_owned(),
+                Subcommand::Clean(CleanArgs { profiles_dir }) => profiles_dir.to_owned(),
             },
         }
     }
@@ -116,8 +114,8 @@ fn run() -> anyhow::Result<()> {
     let args = Args::parse();
 
     let cargo_args = args.cargo_args();
-    let override_pgo_path = args.override_pgo_path();
-    let ctx = get_cargo_ctx(cargo_args, override_pgo_path)?;
+    let profiles_dir = args.profiles_dir();
+    let ctx = get_cargo_ctx(cargo_args, profiles_dir)?;
 
     let Args::Pgo(args) = args;
     match args {
