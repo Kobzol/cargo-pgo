@@ -365,13 +365,13 @@ fn test_change_profile_directory() -> anyhow::Result<()> {
         .run(&[
             "instrument",
             "build",
-            "--override-pgo-path",
+            "--profiles-dir",
             pgo_path.as_str(),
         ])?
         .assert_ok();
     run_command(project.main_binary())?;
     project
-        .run(&["optimize", "--override-pgo-path", pgo_path.as_str()])?
+        .run(&["optimize", "--profiles-dir", pgo_path.as_str()])?
         .assert_ok();
     run_command(project.main_binary())?;
 
