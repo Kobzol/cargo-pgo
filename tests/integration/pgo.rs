@@ -362,12 +362,7 @@ fn test_change_profile_directory() -> anyhow::Result<()> {
     let pgo_path = temp_dir.path().display().to_string();
 
     project
-        .run(&[
-            "instrument",
-            "build",
-            "--profiles-dir",
-            pgo_path.as_str(),
-        ])?
+        .run(&["instrument", "build", "--profiles-dir", pgo_path.as_str()])?
         .assert_ok();
     run_command(project.main_binary())?;
     project
