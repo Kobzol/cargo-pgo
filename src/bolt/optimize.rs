@@ -125,7 +125,7 @@ fn optimize_binary(
     let target_path = binary
         .parent()
         .expect("Cannot get parent of compiled binary")
-        .join(format!("{}-bolt-optimized", basename));
+        .join(format!("{basename}-bolt-optimized"));
 
     let mut args = vec![binary.to_string()];
 

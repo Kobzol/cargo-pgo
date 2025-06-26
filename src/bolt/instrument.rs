@@ -118,7 +118,7 @@ fn instrument_binary(
     let target_path = path
         .parent()
         .expect("Cannot get parent of compiled binary")
-        .join(format!("{}-bolt-instrumented", basename));
+        .join(format!("{basename}-bolt-instrumented"));
 
     let profile_dir = get_binary_profile_dir(profile_dir, artifact);
     std::fs::create_dir_all(&profile_dir)?;

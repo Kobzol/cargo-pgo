@@ -136,7 +136,7 @@ fn main() {
     env_logger::Builder::from_env(Env::default().default_filter_or("cargo_pgo=info")).init();
 
     if let Err(error) = run() {
-        eprintln!("{}", format!("{:?}", error).trim_end_matches('\n'));
+        eprintln!("{}", format!("{error:?}").trim_end_matches('\n'));
         std::process::exit(1);
     }
 }
