@@ -57,7 +57,7 @@ fn check_binary_available(name: &str, resolved: anyhow::Result<PathBuf>, hint: &
         Ok(path) => {
             println!(
                 "{}: found at {}",
-                format!("[{}]", name).bold().green(),
+                format!("[{name}]").bold().green(),
                 cli_format_path(path.display())
             );
             true
@@ -65,7 +65,7 @@ fn check_binary_available(name: &str, resolved: anyhow::Result<PathBuf>, hint: &
         Err(_) => {
             println!(
                 "{}: could not be found ({})",
-                format!("[{}]", name).bold().red(),
+                format!("[{name}]").bold().red(),
                 hint
             );
             false

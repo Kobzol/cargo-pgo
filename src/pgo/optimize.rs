@@ -26,12 +26,22 @@ pub struct PgoOptimizeArgs {
     /// Cargo command that will be used for PGO-optimized compilation.
     #[clap(value_enum, default_value = "build")]
     command: CargoCommand,
+
+    /// Override the PGO profile path.
+    #[clap(long)]
+    profiles_dir: Option<PathBuf>,
+
+    /// Additional arguments that will be passed to the executed `cargo` command.
     cargo_args: Vec<String>,
 }
 
 impl PgoOptimizeArgs {
     pub fn cargo_args(&self) -> &[String] {
         &self.cargo_args
+    }
+
+    pub fn profiles_dir(&self) -> &Option<PathBuf> {
+        &self.profiles_dir
     }
 }
 
@@ -201,7 +211,7 @@ fn merge_profiles(
     let hash = hash_file(&profile_tmp_path)
         .map_err(|error| anyhow::anyhow!("Cannot hash merged profile file: {:?}", error))?;
 
-    let profile_name = format!("merged-{}.profdata", hash);
+    let profile_name = format!("merged-{hash}.profdata");
     let target_profile = pgo_dir.join(profile_name);
 
     // Move the merged profile to PGO profile directory
@@ -230,7 +240,7 @@ impl MissingProfileCounter {
     }
 }
 
-fn get_pgo_missing_profile(message: &CompilerMessage) -> Option<PgoMissingProfile> {
+fn get_pgo_missing_profile(message: &CompilerMessage) -> Option<PgoMissingProfile<'_>> {
     static REGEX: OnceLock<Regex> = OnceLock::new();
 
     let regex = REGEX.get_or_init(|| {

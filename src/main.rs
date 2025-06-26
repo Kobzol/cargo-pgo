@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use cargo_pgo::bolt::instrument::{bolt_instrument, BoltInstrumentArgs};
 use cargo_pgo::bolt::optimize::{bolt_optimize, BoltOptimizeArgs};
 use cargo_pgo::build::CargoCommand;
@@ -46,7 +48,7 @@ enum Subcommand {
     #[clap(subcommand)]
     Bolt(BoltArgs),
     /// Clean PGO and BOLT artifacts from the disk.
-    Clean,
+    Clean(CleanArgs),
 }
 
 #[derive(clap::Subcommand, Debug)]
@@ -66,6 +68,14 @@ impl BoltArgs {
     }
 }
 
+#[derive(clap::Parser, Debug)]
+#[clap(trailing_var_arg(true))]
+struct CleanArgs {
+    /// Override the PGO profile directory.
+    #[clap(long)]
+    profiles_dir: Option<PathBuf>,
+}
+
 impl Args {
     fn cargo_args(&self) -> &[String] {
         match self {
@@ -78,7 +88,23 @@ impl Args {
                 | Subcommand::Bench(args) => args.cargo_args(),
                 Subcommand::Optimize(args) => args.cargo_args(),
                 Subcommand::Bolt(args) => args.cargo_args(),
-                Subcommand::Clean => &[],
+                Subcommand::Clean(..) => &[],
+            },
+        }
+    }
+
+    fn profiles_dir(&self) -> Option<PathBuf> {
+        match self {
+            Args::Pgo(args) => match args {
+                Subcommand::Info => None,
+                Subcommand::Instrument(args) => args.profiles_dir().to_owned(),
+                Subcommand::Build(args)
+                | Subcommand::Run(args)
+                | Subcommand::Test(args)
+                | Subcommand::Bench(args) => args.profiles_dir().to_owned(),
+                Subcommand::Optimize(args) => args.profiles_dir().to_owned(),
+                Subcommand::Bolt(..) => None,
+                Subcommand::Clean(CleanArgs { profiles_dir }) => profiles_dir.to_owned(),
             },
         }
     }
@@ -88,7 +114,8 @@ fn run() -> anyhow::Result<()> {
     let args = Args::parse();
 
     let cargo_args = args.cargo_args();
-    let ctx = get_cargo_ctx(cargo_args)?;
+    let profiles_dir = args.profiles_dir();
+    let ctx = get_cargo_ctx(cargo_args, profiles_dir)?;
 
     let Args::Pgo(args) = args;
     match args {
@@ -101,7 +128,7 @@ fn run() -> anyhow::Result<()> {
         Subcommand::Optimize(args) => pgo_optimize(ctx, args),
         Subcommand::Bolt(BoltArgs::Build(args)) => bolt_instrument(ctx, args),
         Subcommand::Bolt(BoltArgs::Optimize(args)) => bolt_optimize(ctx, args),
-        Subcommand::Clean => clean_artifacts(ctx),
+        Subcommand::Clean(..) => clean_artifacts(ctx),
     }
 }
 
@@ -109,7 +136,7 @@ fn main() {
     env_logger::Builder::from_env(Env::default().default_filter_or("cargo_pgo=info")).init();
 
     if let Err(error) = run() {
-        eprintln!("{}", format!("{:?}", error).trim_end_matches('\n'));
+        eprintln!("{}", format!("{error:?}").trim_end_matches('\n'));
         std::process::exit(1);
     }
 }

@@ -82,7 +82,7 @@ pub fn cargo_command_with_rustflags(
             // If RUSTFLAGS was defined explicitly, we want to append to it. These RUSTFLAGS will
             // override everything else, so we don't need to care about .cargo/config.toml, but we
             // have to add ourselves to it, so that we do use the PGO flags
-            write!(&mut existing_rustflags, " {}", serialized_rustflags)?;
+            write!(&mut existing_rustflags, " {serialized_rustflags}")?;
             env.insert("RUSTFLAGS".to_string(), existing_rustflags);
         }
         (false, _) => {
@@ -104,7 +104,7 @@ pub fn cargo_command_with_rustflags(
                 if index > 0 {
                     flags.push(',');
                 }
-                flags.push_str(&format!("'{}'", flag));
+                flags.push_str(&format!("'{flag}'"));
             }
             flags.push(']');
             final_cargo_args.push(flags);
@@ -270,7 +270,7 @@ fn write_metadata_message<W: Write>(mut stream: W, message: Message) {
     match message {
         Message::TextLine(line) => {
             log::debug!("TextLine {}", line);
-            writeln!(stream, "{}", line).unwrap();
+            writeln!(stream, "{line}").unwrap();
         }
         Message::CompilerMessage(message) => {
             log::debug!("CompilerMessage {}", message);
