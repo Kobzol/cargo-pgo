@@ -18,8 +18,6 @@ use std::process::{Command, ExitStatus};
 
 pub use workspace::get_cargo_ctx;
 
-use rustc_version;
-
 pub(crate) fn resolve_binary(path: &Path) -> anyhow::Result<PathBuf> {
     Ok(which::which(path)?)
 }
