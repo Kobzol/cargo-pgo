@@ -233,7 +233,7 @@ fn test_respect_target_dir() -> anyhow::Result<()> {
 
 #[test]
 fn test_respect_profile() -> anyhow::Result<()> {
-    if !version_check::is_min_version("1.57.0").unwrap_or(false) {
+    if !(rustc_version::version()? >= semver::Version::new(1, 57, 0)) {
         println!("Skipping test_respect_profile because of too old rustc");
         return Ok(());
     }
@@ -284,7 +284,7 @@ fn test_respect_existing_rustflags() -> anyhow::Result<()> {
 /// This only works for Rust 1.63+.
 #[test]
 fn test_override_build_rustflags_from_config() -> anyhow::Result<()> {
-    if !version_check::is_min_version("1.63.0").unwrap_or(false) {
+    if !(rustc_version::version()? >= semver::Version::new(1, 63, 0)) {
         return Ok(());
     }
 
@@ -308,7 +308,7 @@ rustflags = ["-Ctarget-cpu=native"]
 
 #[test]
 fn test_respect_existing_target_rustflags_from_config() -> anyhow::Result<()> {
-    if !version_check::is_min_version("1.63.0").unwrap_or(false) {
+    if !(rustc_version::version()? >= semver::Version::new(1, 63, 0)) {
         return Ok(());
     }
 
