@@ -72,7 +72,7 @@ pub fn cargo_command_with_rustflags(
     // values from .cargo/config.toml.
 
     // The `--config` flag is only supported in Rust 1.63+.
-    let supports_config_flag = version_check::is_min_version("1.63.0").unwrap_or(false);
+    let supports_config_flag = rustc_version::version()? >= semver::Version::new(1, 63, 0);
     let serialized_rustflags = rustflags.join(" ");
 
     let mut final_cargo_args = vec![];

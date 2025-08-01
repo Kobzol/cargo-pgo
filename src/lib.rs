@@ -12,7 +12,6 @@ pub mod pgo;
 pub(crate) mod utils;
 pub(crate) mod workspace;
 
-use anyhow::anyhow;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus};
@@ -68,28 +67,7 @@ fn run_command<S: AsRef<OsStr>, Str: AsRef<OsStr>>(
 
 /// Tries to find the default target triple used for compiling on the current host computer.
 pub fn get_default_target() -> anyhow::Result<String> {
-    get_rustc_info("host: ")
-}
-
-pub fn get_rustc_version() -> anyhow::Result<semver::Version> {
-    let version = get_rustc_info("release: ")?;
-    let version = semver::Version::parse(&version)?;
-    Ok(version)
-}
-
-fn get_rustc_info(field: &str) -> anyhow::Result<String> {
-    // Query rustc for defaults.
-    let output = run_command("rustc", &["-vV"])?;
-
-    // Parse the field from stdout.
-    let host = output
-        .stdout
-        .lines()
-        .find(|l| l.starts_with(field))
-        .map(|l| l[field.len()..].trim())
-        .ok_or_else(|| anyhow!("Failed to parse field {} from rustc output.", field))?
-        .to_owned();
-    Ok(host)
+    Ok(rustc_version::version_meta()?.host)
 }
 
 /// Clears all files from the directory, and recreates it.

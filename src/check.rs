@@ -1,11 +1,11 @@
 use crate::bolt::env::{find_llvm_bolt, find_merge_fdata};
 use crate::bolt::llvm_bolt_install_hint;
 use crate::cli::cli_format_path;
-use crate::get_rustc_version;
 use crate::pgo::env::find_pgo_env;
 use crate::pgo::llvm_profdata_install_hint;
 use anyhow::anyhow;
 use colored::Colorize;
+use rustc_version;
 use std::path::PathBuf;
 
 /// Check that binaries required for performing PGO and BOLT can be found.
@@ -23,7 +23,7 @@ pub fn environment_info() -> anyhow::Result<()> {
 }
 
 fn check_rustc_version() -> bool {
-    match get_rustc_version() {
+    match rustc_version::version() {
         Ok(version) => {
             if version >= semver::Version::new(1, 39, 0) {
                 println!(
