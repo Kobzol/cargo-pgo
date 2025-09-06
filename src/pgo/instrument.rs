@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use crate::build::{
-    cargo_command_with_rustflags, get_artifact_kind, handle_metadata_message, CargoCommand,
+    CargoCommand, cargo_command_with_rustflags, get_artifact_kind, handle_metadata_message,
 };
 use crate::clear_directory;
 use crate::cli::cli_format_path;
