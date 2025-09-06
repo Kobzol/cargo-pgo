@@ -6,15 +6,24 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "v*.*.*" # v1.2.3
   pull_request:
 
 jobs:
   optimize:
     name: Optimize
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: foo
+            release_name: foo-linux-gnu-amd64-pgo
+            target: x86_64-unknown-linux-gnu
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -36,8 +45,13 @@ jobs:
 
       # Run the instrumented binary on some workflow to gather profiles
       - name: Gather PGO profiles
-        run: ./target/x86_64-unknown-linux-gnu/release/foo
+        run: ./target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
 
       - name: Build optimized binary
         run: cargo pgo optimize
+
       # Now do something with the PGO optimized binary at `./target/x86_64-unknown-linux-gnu/release/foo` :)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.release_name }}
+          path: target/${{ matrix.target }}/release/${{ matrix.artifact_name }}

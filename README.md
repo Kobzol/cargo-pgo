@@ -209,7 +209,7 @@ Here's a short guide how to compile LLVM with BOLT manually. You will need a rec
     ```
 2) (Optional) Checkout a stable version, at least 14.0.0
     ```bash
-    $ git checkout llvmorg-14.0.5
+    $ git checkout llvmorg-14.0.6
     ```
    Note that BOLT is being actively fixed, so a `trunk` version of LLVM might actually work better.
 3) Prepare the build
