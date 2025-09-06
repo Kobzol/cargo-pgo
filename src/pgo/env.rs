@@ -32,9 +32,9 @@ pub fn find_pgo_env() -> anyhow::Result<PgoEnv> {
     }
 
     // Try to find `llvm-profdata` directly in PATH
-    match resolve_binary(Path::new("llvm-profdata"))
+    if let Ok(llvm_profdata) = resolve_binary(Path::new("llvm-profdata"))
         .or_else(|_| resolve_binary(Path::new("llvm-profdata.exe")))
-    { Ok(llvm_profdata) => {
+    {
         log::warn!(
             "llvm-profdata was resolved from PATH. \
 Make sure that its version is compatible with rustc! If not, run `{}`.",
@@ -42,7 +42,7 @@ Make sure that its version is compatible with rustc! If not, run `{}`.",
         );
 
         Ok(PgoEnv { llvm_profdata })
-    } _ => {
+    } else {
         Err(anyhow::anyhow!("Could not find `llvm-profdata`"))
-    }}
+    }
 }
