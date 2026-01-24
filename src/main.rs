@@ -1,13 +1,13 @@
 use std::path::PathBuf;
 
-use cargo_pgo::bolt::instrument::{bolt_instrument, BoltInstrumentArgs};
-use cargo_pgo::bolt::optimize::{bolt_optimize, BoltOptimizeArgs};
+use cargo_pgo::bolt::instrument::{BoltInstrumentArgs, bolt_instrument};
+use cargo_pgo::bolt::optimize::{BoltOptimizeArgs, bolt_optimize};
 use cargo_pgo::build::CargoCommand;
 use cargo_pgo::check::environment_info;
 use cargo_pgo::clean::clean_artifacts;
 use cargo_pgo::get_cargo_ctx;
-use cargo_pgo::pgo::instrument::{pgo_instrument, PgoInstrumentArgs, PgoInstrumentShortcutArgs};
-use cargo_pgo::pgo::optimize::{pgo_optimize, PgoOptimizeArgs};
+use cargo_pgo::pgo::instrument::{PgoInstrumentArgs, PgoInstrumentShortcutArgs, pgo_instrument};
+use cargo_pgo::pgo::optimize::{PgoOptimizeArgs, pgo_optimize};
 use clap::Parser;
 use env_logger::Env;
 
@@ -69,7 +69,6 @@ impl BoltArgs {
 }
 
 #[derive(clap::Parser, Debug)]
-#[clap(trailing_var_arg(true))]
 struct CleanArgs {
     /// Override the PGO profile directory.
     #[clap(long)]

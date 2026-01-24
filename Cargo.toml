@@ -1,8 +1,8 @@
 [package]
 name = "cargo-pgo"
 version = "0.2.9"
-edition = "2021"
-rust-version = "1.80.0"
+edition = "2024"
+rust-version = "1.85.0"
 
 description = "Cargo subcommand for optimizing Rust binaries with PGO and BOLT."
 repository = "https://github.com/kobzol/cargo-pgo"

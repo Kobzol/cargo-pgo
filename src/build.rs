@@ -193,12 +193,16 @@ pub fn parse_cargo_args(cargo_args: Vec<String>) -> CargoArgs {
             }
             // Skip `--release`, we will pass it by ourselves.
             "--release" => {
-                log::warn!("Do not pass `--release` manually, it will be added automatically by `cargo-pgo`");
+                log::warn!(
+                    "Do not pass `--release` manually, it will be added automatically by `cargo-pgo`"
+                );
             }
             _ => {
                 if get_key_value("--message-format", arg.as_str(), &mut iterator).is_some() {
                     // Skip `--message-format`, we need it to be JSON.
-                    log::warn!("Do not pass `--message-format` manually, it will be added automatically by `cargo-pgo`");
+                    log::warn!(
+                        "Do not pass `--message-format` manually, it will be added automatically by `cargo-pgo`"
+                    );
                 } else if let Some(value) = get_key_value("--target", arg.as_str(), &mut iterator) {
                     // Check if `--target` was passed
                     args.contains_target = true;
