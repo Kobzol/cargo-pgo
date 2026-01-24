@@ -1,8 +1,11 @@
 # `cargo-pgo` [![Build Status]][actions] [![Latest Version]][crates.io]
 
 [Build Status]: https://github.com/kobzol/cargo-pgo/actions/workflows/check.yml/badge.svg
+
 [actions]: https://github.com/kobzol/cargo-pgo/actions?query=branch%3Amain
+
 [Latest Version]: https://img.shields.io/crates/v/cargo-pgo.svg
+
 [crates.io]: https://crates.io/crates/cargo-pgo
 
 **Cargo subcommand that makes it easier to use [PGO](https://doc.rust-lang.org/rustc/profile-guided-optimization.html)
@@ -54,16 +57,21 @@ It is important to understand the workflow of using feedback-directed optimizati
 consists of three general steps:
 
 1) **Build binary with instrumentation**
-    - Perform a special build of your executable which will add additional instrumentation code to it.
+
+- Perform a special build of your executable which will add additional instrumentation code to it.
+
 2) **Gather performance profiles**
-    - Run your instrumented binary on representative workloads. The binary will generate profile files
-    on disk which will be then used to optimize the binary.
-    - Try to gather as much data as possible. Ideally, exercise all the important parts of the codebase (in the coverage sense).
+
+- Run your instrumented binary on representative workloads. The binary will generate profile files
+  on disk which will be then used to optimize the binary.
+- Try to gather as much data as possible. Ideally, exercise all the important parts of the codebase (in the coverage sense).
+
 3) **Build an optimized binary using generated profiles**
-    - The compiler will use the generated profiles to build an optimized version of your binary.
-    - The binary will be optimized with respect to the profiled workloads. If you execute it on a
-    substantially different workload, the optimizations might not work (or they might even make your
-    binary slower!).
+
+- The compiler will use the generated profiles to build an optimized version of your binary.
+- The binary will be optimized with respect to the profiled workloads. If you execute it on a
+  substantially different workload, the optimizations might not work (or they might even make your
+  binary slower!).
 
 ## Example
 ![Example usage of the tool](docs/terminal.gif)
@@ -101,8 +109,8 @@ There are several ways of producing the profiles:
     $ cargo pgo instrument build
     ```
 
-    This is the simplest and recommended approach. You build an instrumented binary and then run it
-    on some workloads. Note that the binary will be located at `<target-dir>/<target-triple>/release/<binary-name>`.
+  This is the simplest and recommended approach. You build an instrumented binary and then run it
+  on some workloads. Note that the binary will be located at `<target-dir>/<target-triple>/release/<binary-name>`.
 
 - **Running an instrumented program**
     ```bash
@@ -111,9 +119,9 @@ There are several ways of producing the profiles:
     $ cargo pgo instrument run
     ```
 
-    You can also directly execute an instrumented binary with the `cargo pgo run` command,
-    which is a shortcut for `cargo pgo instrument run`. This command will instrument the binary and
-    then execute it right away.
+  You can also directly execute an instrumented binary with the `cargo pgo run` command,
+  which is a shortcut for `cargo pgo instrument run`. This command will instrument the binary and
+  then execute it right away.
 
 - **Run instrumented tests**
     ```bash
@@ -121,9 +129,9 @@ There are several ways of producing the profiles:
     # or
     $ cargo pgo instrument test
     ```
-    This command will generate profiles by executing tests. Note that unless your test suite
-    is really comprehensive, it might be better to create a binary and run it on some specific
-    workloads instead.
+  This command will generate profiles by executing tests. Note that unless your test suite
+  is really comprehensive, it might be better to create a binary and run it on some specific
+  workloads instead.
 
 - **Run instrumented benchmarks**
     ```bash
@@ -131,16 +139,22 @@ There are several ways of producing the profiles:
     # or
     $ cargo pgo instrument bench
     ```
-    This command will generate profiles by executing benchmarks.
+  This command will generate profiles by executing benchmarks.
 
 ### Building an optimized binary
 Once you have generated some profiles, you can execute `cargo pgo optimize` to build an optimized
-version of your binary.
-
-If you want, you can also pass a command to `cargo pgo optimize` to e.g. run PGO-optimized benchmarks
-or tests:
+version of your binary. Same as with `cargo pgo instrument`, you can pass the executed
+`cargo` command and additional arguments passed to `cargo` after `--`:
 
 ```bash
+$ cargo pgo optimize [<command>] -- [cargo-args]
+```
+
+Supported commands are `build`, `run`, `test` and `bench`. The default is `build`.
+
+```bash
+$ cargo pgo optimize build
+$ cargo pgo optimize run
 $ cargo pgo optimize bench
 $ cargo pgo optimize test
 ```
@@ -225,16 +239,16 @@ Here's a short guide how to compile LLVM with BOLT manually. You will need a rec
     $ ninja
     $ ninja install 
     ```
-    The built files should be located at `<llvm-dir>/llvm-install/bin`. You should add this directory
-    to `$PATH` to make BOLT usable with `cargo-pgo`.
+   The built files should be located at `<llvm-dir>/llvm-install/bin`. You should add this directory
+   to `$PATH` to make BOLT usable with `cargo-pgo`.
 
 ## Caveats
 - `cargo-pgo` needs to set RUSTFLAGS for the crate being compiled. If you pass your own RUSTFLAGS using `config.toml` file, please make sure to use the `[target.<...>] rustflags = ...` section, instead of the `[build] rustflags = ...` section. With `target`, your flags will be combined with the PGO flags. If you use `build`, your flags will be overridden instead. See [#49](https://github.com/Kobzol/cargo-pgo/issues/49) for more context.
 
 # Related work
 - [cargo-pgo](https://github.com/vadimcn/cargo-pgo) I basically independently reimplemented this
-crate. It uses an almost identical approach, but doesn't support BOLT. It's not maintained
-anymore, I got a permission from its author to (re)use its name.
+  crate. It uses an almost identical approach, but doesn't support BOLT. It's not maintained
+  anymore, I got a permission from its author to (re)use its name.
 
 # License
 [MIT](LICENSE)
