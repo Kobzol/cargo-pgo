@@ -5,11 +5,11 @@ use cargo_metadata::camino::Utf8PathBuf;
 use cargo_metadata::{Artifact, Message};
 use colored::Colorize;
 
-use crate::bolt::cli::{add_bolt_args, BoltArgs};
-use crate::bolt::env::{find_bolt_env, BoltEnv};
+use crate::bolt::cli::{BoltArgs, add_bolt_args};
+use crate::bolt::env::{BoltEnv, find_bolt_env};
 use crate::bolt::{bolt_pgo_rustflags, get_binary_profile_dir};
 use crate::build::{
-    cargo_command_with_rustflags, get_artifact_kind, handle_metadata_message, CargoCommand,
+    CargoCommand, cargo_command_with_rustflags, get_artifact_kind, handle_metadata_message,
 };
 use crate::cli::cli_format_path;
 use crate::utils::str::capitalize;

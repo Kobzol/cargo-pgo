@@ -6,15 +6,15 @@ use anyhow::anyhow;
 use cargo_metadata::diagnostic::DiagnosticLevel;
 use cargo_metadata::{CompilerMessage, Message};
 use colored::Colorize;
-use humansize::{format_size, BINARY};
+use humansize::{BINARY, format_size};
 use regex::Regex;
-use rustc_demangle::{demangle, Demangle};
+use rustc_demangle::{Demangle, demangle};
 
 use crate::build::{
-    cargo_command_with_rustflags, get_artifact_kind, handle_metadata_message, CargoCommand,
+    CargoCommand, cargo_command_with_rustflags, get_artifact_kind, handle_metadata_message,
 };
 use crate::cli::cli_format_path;
-use crate::pgo::env::{find_pgo_env, PgoEnv};
+use crate::pgo::env::{PgoEnv, find_pgo_env};
 use crate::pgo::llvm_profdata_install_hint;
 use crate::utils::file::{gather_files_with_extension, hash_file, move_file};
 use crate::utils::str::pluralize;
