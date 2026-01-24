@@ -1,5 +1,9 @@
 # Dev
 ## Changes
+- Better document that Cargo arguments have to be passed after `--` (https://github.com/Kobzol/cargo-pgo/pull/80).
+
+# 0.2.9 (24. 1. 2025)
+## Changes
 
 - Use `target.rustflags` for passing PGO flags instead
   of `build.rustflags` (https://github.com/Kobzol/cargo-pgo/issues/56).
