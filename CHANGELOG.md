@@ -1,6 +1,22 @@
-# Dev
-## Changes
-- Better document that Cargo arguments have to be passed after `--` (https://github.com/Kobzol/cargo-pgo/pull/80).
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.2.10](https://github.com/Kobzol/cargo-pgo/compare/v0.2.9...v0.2.10) - 2026-01-24
+
+### Changes
+- Update edition to 2024 and MSRV to 1.85.0
+- Specify in `help` that cargo args have to be passed after `--`
+- Better document `cargo pgo optimize` in the README
+- Add ability to override pgo path
+
+### Fixes
+- Use rustc_version instead of version_check: its almost good but missed host field
 
 # 0.2.9 (24. 1. 2025)
 ## Changes
