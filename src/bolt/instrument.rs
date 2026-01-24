@@ -17,7 +17,6 @@ use crate::workspace::CargoContext;
 use crate::{clear_directory, run_command};
 
 #[derive(clap::Parser, Debug)]
-#[clap(trailing_var_arg(true))]
 pub struct BoltInstrumentArgs {
     /// Instrument a PGO-optimized binary. To use this, you must already have PGO profiles on disk.
     /// Later also pass the same flag to `cargo pgo bolt optimize`.
@@ -31,6 +30,7 @@ pub struct BoltInstrumentArgs {
     #[clap(flatten)]
     bolt_args: BoltArgs,
     /// Additional arguments that will be passed to `cargo build`.
+    #[arg(last(true))]
     cargo_args: Vec<String>,
 }
 

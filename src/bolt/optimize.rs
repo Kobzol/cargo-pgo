@@ -20,7 +20,6 @@ use crate::utils::str::capitalize;
 use crate::workspace::CargoContext;
 
 #[derive(clap::Parser, Debug)]
-#[clap(trailing_var_arg(true))]
 pub struct BoltOptimizeArgs {
     /// Optimize a PGO-optimized binary. To use this, you must already have PGO profiles on disk.
     /// Use this flag only if you have also used it for `cargo pgo bolt build`.
@@ -29,6 +28,7 @@ pub struct BoltOptimizeArgs {
     #[clap(flatten)]
     bolt_args: BoltArgs,
     /// Additional arguments that will be passed to `cargo build`.
+    #[arg(last(true))]
     cargo_args: Vec<String>,
 }
 

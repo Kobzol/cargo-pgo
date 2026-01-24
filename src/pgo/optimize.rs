@@ -21,7 +21,6 @@ use crate::utils::str::pluralize;
 use crate::workspace::CargoContext;
 
 #[derive(clap::Parser, Debug)]
-#[clap(trailing_var_arg(true))]
 pub struct PgoOptimizeArgs {
     /// Cargo command that will be used for PGO-optimized compilation.
     #[clap(value_enum, default_value = "build")]
@@ -32,6 +31,7 @@ pub struct PgoOptimizeArgs {
     profiles_dir: Option<PathBuf>,
 
     /// Additional arguments that will be passed to the executed `cargo` command.
+    #[arg(last(true))]
     cargo_args: Vec<String>,
 }
 

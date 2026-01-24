@@ -69,7 +69,6 @@ impl BoltArgs {
 }
 
 #[derive(clap::Parser, Debug)]
-#[clap(trailing_var_arg(true))]
 struct CleanArgs {
     /// Override the PGO profile directory.
     #[clap(long)]

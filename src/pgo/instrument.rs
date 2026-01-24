@@ -10,7 +10,6 @@ use cargo_metadata::Message;
 use colored::Colorize;
 
 #[derive(clap::Parser, Debug)]
-#[clap(trailing_var_arg(true))]
 pub struct PgoInstrumentArgs {
     /// Cargo command that will be used for PGO-instrumented compilation.
     #[clap(value_enum, default_value = "build")]
@@ -25,6 +24,7 @@ pub struct PgoInstrumentArgs {
     profiles_dir: Option<PathBuf>,
 
     /// Additional arguments that will be passed to the executed `cargo` command.
+    #[arg(last(true))]
     cargo_args: Vec<String>,
 }
 
@@ -39,7 +39,6 @@ impl PgoInstrumentArgs {
 }
 
 #[derive(clap::Parser, Debug)]
-#[clap(trailing_var_arg(true))]
 pub struct PgoInstrumentShortcutArgs {
     /// Do not remove profiles that were gathered during previous runs.
     #[clap(long, action)]
@@ -50,6 +49,7 @@ pub struct PgoInstrumentShortcutArgs {
     profiles_dir: Option<PathBuf>,
 
     /// Additional arguments that will be passed to the executed `cargo` command.
+    #[arg(last(true))]
     cargo_args: Vec<String>,
 }
 
