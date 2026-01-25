@@ -267,6 +267,42 @@ fn main() {
 }
 
 #[test]
+fn test_respect_cargo_args_with_cargo_command() -> anyhow::Result<()> {
+    let mut project = init_cargo_project()?;
+    project.file(
+        "src/main.rs",
+        r#"
+fn main() {}
+"#,
+    );
+
+    project
+        .run(&["instrument", "build", "--", "--bin", "bar"])?
+        .assert_error()
+        .assert_stderr_contains("no bin target named `bar`");
+
+    Ok(())
+}
+
+#[test]
+fn test_respect_cargo_args_without_cargo_command() -> anyhow::Result<()> {
+    let mut project = init_cargo_project()?;
+    project.file(
+        "src/main.rs",
+        r#"
+fn main() {}
+"#,
+    );
+
+    project
+        .run(&["instrument", "--", "--bin", "bar"])?
+        .assert_error()
+        .assert_stderr_contains("no bin target named `bar`");
+
+    Ok(())
+}
+
+#[test]
 fn test_respect_existing_rustflags() -> anyhow::Result<()> {
     let project = init_cargo_project()?;
 
