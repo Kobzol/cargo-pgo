@@ -4,12 +4,13 @@ use std::path::{Path, PathBuf};
 
 pub struct CargoContext {
     target_directory: PathBuf,
-    profiles_dir: Option<PathBuf>,
+    pgo_profiles_dir: Option<PathBuf>,
+    bolt_profiles_dir: Option<PathBuf>,
 }
 
 impl CargoContext {
     pub fn get_pgo_directory(&self) -> anyhow::Result<PathBuf> {
-        if let Some(profiles_dir) = &self.profiles_dir {
+        if let Some(profiles_dir) = &self.pgo_profiles_dir {
             Ok(profiles_dir.clone())
         } else {
             self.get_target_directory(Path::new("pgo-profiles"))
@@ -17,7 +18,11 @@ impl CargoContext {
     }
 
     pub fn get_bolt_directory(&self) -> anyhow::Result<PathBuf> {
-        self.get_target_directory(Path::new("bolt-profiles"))
+        if let Some(profiles_dir) = &self.bolt_profiles_dir {
+            Ok(profiles_dir.clone())
+        } else {
+            self.get_target_directory(Path::new("bolt-profiles"))
+        }
     }
 
     fn get_target_directory(&self, path: &Path) -> anyhow::Result<PathBuf> {
@@ -30,7 +35,8 @@ impl CargoContext {
 /// Finds Cargo metadata from the current directory.
 pub fn get_cargo_ctx(
     cargo_args: &[String],
-    profiles_dir: Option<PathBuf>,
+    pgo_profiles_dir: Option<PathBuf>,
+    bolt_profiles_dir: Option<PathBuf>,
 ) -> anyhow::Result<CargoContext> {
     let cargo_args = parse_cargo_args(cargo_args.to_vec());
     let target_directory = match cargo_args.target_dir {
@@ -46,6 +52,7 @@ pub fn get_cargo_ctx(
 
     Ok(CargoContext {
         target_directory,
-        profiles_dir,
+        pgo_profiles_dir,
+        bolt_profiles_dir,
     })
 }

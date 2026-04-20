@@ -27,6 +27,9 @@ pub struct BoltOptimizeArgs {
     with_pgo: bool,
     #[clap(flatten)]
     bolt_args: BoltArgs,
+    /// Override the BOLT profile path.
+    #[clap(long)]
+    profiles_dir: Option<PathBuf>,
     /// Additional arguments that will be passed to `cargo build`.
     #[arg(last(true))]
     cargo_args: Vec<String>,
@@ -35,6 +38,10 @@ pub struct BoltOptimizeArgs {
 impl BoltOptimizeArgs {
     pub fn cargo_args(&self) -> &[String] {
         &self.cargo_args
+    }
+
+    pub fn profiles_dir(&self) -> &Option<PathBuf> {
+        &self.profiles_dir
     }
 }
 

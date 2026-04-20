@@ -66,6 +66,13 @@ impl BoltArgs {
             BoltArgs::Optimize(args) => args.cargo_args(),
         }
     }
+
+    pub fn profiles_dir(&self) -> &Option<PathBuf> {
+        match self {
+            BoltArgs::Build(args) => args.profiles_dir(),
+            BoltArgs::Optimize(args) => args.profiles_dir(),
+        }
+    }
 }
 
 #[derive(clap::Parser, Debug)]
@@ -73,6 +80,9 @@ struct CleanArgs {
     /// Override the PGO profile directory.
     #[clap(long)]
     profiles_dir: Option<PathBuf>,
+    /// Override the BOLT profile directory.
+    #[clap(long)]
+    bolt_profiles_dir: Option<PathBuf>,
 }
 
 impl Args {
@@ -102,8 +112,26 @@ impl Args {
                 | Subcommand::Test(args)
                 | Subcommand::Bench(args) => args.profiles_dir().to_owned(),
                 Subcommand::Optimize(args) => args.profiles_dir().to_owned(),
+                Subcommand::Clean(CleanArgs { profiles_dir, .. }) => profiles_dir.to_owned(),
                 Subcommand::Bolt(..) => None,
-                Subcommand::Clean(CleanArgs { profiles_dir }) => profiles_dir.to_owned(),
+            },
+        }
+    }
+
+    fn bolt_profiles_dir(&self) -> Option<PathBuf> {
+        match self {
+            Args::Pgo(args) => match args {
+                Subcommand::Bolt(args) => args.profiles_dir().to_owned(),
+                Subcommand::Clean(CleanArgs {
+                    bolt_profiles_dir, ..
+                }) => bolt_profiles_dir.to_owned(),
+                Subcommand::Info
+                | Subcommand::Instrument(..)
+                | Subcommand::Build(..)
+                | Subcommand::Run(..)
+                | Subcommand::Test(..)
+                | Subcommand::Bench(..)
+                | Subcommand::Optimize(..) => None,
             },
         }
     }
@@ -114,7 +142,8 @@ fn run() -> anyhow::Result<()> {
 
     let cargo_args = args.cargo_args();
     let profiles_dir = args.profiles_dir();
-    let ctx = get_cargo_ctx(cargo_args, profiles_dir)?;
+    let bolt_profiles_dir = args.bolt_profiles_dir();
+    let ctx = get_cargo_ctx(cargo_args, profiles_dir, bolt_profiles_dir)?;
 
     let Args::Pgo(args) = args;
     match args {

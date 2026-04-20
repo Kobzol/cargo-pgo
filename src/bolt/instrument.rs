@@ -27,6 +27,10 @@ pub struct BoltInstrumentArgs {
     #[clap(long, action)]
     keep_profiles: bool,
 
+    /// Override the BOLT profile path.
+    #[clap(long)]
+    profiles_dir: Option<PathBuf>,
+
     #[clap(flatten)]
     bolt_args: BoltArgs,
     /// Additional arguments that will be passed to `cargo build`.
@@ -37,6 +41,10 @@ pub struct BoltInstrumentArgs {
 impl BoltInstrumentArgs {
     pub fn cargo_args(&self) -> &[String] {
         &self.cargo_args
+    }
+
+    pub fn profiles_dir(&self) -> &Option<PathBuf> {
+        &self.profiles_dir
     }
 }
 
