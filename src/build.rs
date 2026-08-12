@@ -98,8 +98,9 @@ pub fn cargo_command_with_rustflags(
             // precedence. See https://github.com/Kobzol/cargo-pgo/issues/56 for more details.
             final_cargo_args.push("--config".to_string());
 
-            // `cfg(all())` should match any target.
-            let mut flags = String::from("target.'cfg(all())'.rustflags=[");
+            // `cfg(not(not(all())))` should match any target, while also be unlikely to overlap
+            // with real-world usage.
+            let mut flags = String::from("target.'cfg(not(not(all())))'.rustflags=[");
             for (index, flag) in rustflags.into_iter().enumerate() {
                 if index > 0 {
                     flags.push(',');
