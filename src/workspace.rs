@@ -32,7 +32,7 @@ impl CargoContext {
     }
 }
 
-/// Finds Cargo metadata from the current directory.
+/// Finds Cargo metadata for the selected manifest or current directory.
 pub fn get_cargo_ctx(
     cargo_args: &[String],
     pgo_profiles_dir: Option<PathBuf>,
@@ -42,7 +42,10 @@ pub fn get_cargo_ctx(
     let target_directory = match cargo_args.target_dir {
         Some(dir) => dir,
         None => {
-            let cmd = cargo_metadata::MetadataCommand::new();
+            let mut cmd = cargo_metadata::MetadataCommand::new();
+            if let Some(manifest_path) = cargo_args.manifest_path {
+                cmd.manifest_path(manifest_path);
+            }
             let metadata = cmd
                 .exec()
                 .map_err(|error| anyhow::anyhow!("Cannot get cargo metadata: {:?}", error))?;

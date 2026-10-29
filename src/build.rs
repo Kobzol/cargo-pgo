@@ -12,6 +12,7 @@ pub struct CargoArgs {
     pub contains_target: bool,
     pub contains_profile: bool,
     pub target_dir: Option<PathBuf>,
+    pub manifest_path: Option<PathBuf>,
 }
 
 enum ReleaseMode {
@@ -224,6 +225,14 @@ pub fn parse_cargo_args(cargo_args: Vec<String>) -> CargoArgs {
                     // Extract `--target-dir`
                     args.target_dir = value.clone().map(PathBuf::from);
                     args.filtered.push("--target-dir".to_string());
+                    if let Some(value) = value {
+                        args.filtered.push(value);
+                    }
+                } else if let Some(value) =
+                    get_key_value("--manifest-path", arg.as_str(), &mut iterator)
+                {
+                    args.manifest_path = value.clone().map(PathBuf::from);
+                    args.filtered.push("--manifest-path".to_string());
                     if let Some(value) = value {
                         args.filtered.push(value);
                     }

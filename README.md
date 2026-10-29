@@ -159,6 +159,35 @@ $ cargo pgo optimize bench
 $ cargo pgo optimize test
 ```
 
+### Replaying a training plan
+
+`cargo pgo train --plan training.json --report report.json -- --bin my-app`
+builds one instrumented executable and runs the workloads from a JSON file:
+
+```json
+{
+  "workloads": [
+    {"args": ["input.txt"], "cwd": "fixtures", "repeat": 3},
+    {"args": ["--stdin"], "stdin": "sample.txt", "env": {"MODE": "small"}}
+  ]
+}
+```
+
+Arguments are passed literally. Workload `cwd` and `stdin` paths are relative to
+the plan file; the default working directory is the plan's directory. Environment
+values override inherited values for that attempt, and a null value removes a
+variable. `LLVM_PROFILE_FILE` is reserved for the trainer. Each workload runs once
+unless `repeat` specifies a positive count.
+
+The trainer validates the entire plan before building. It collects only nonempty
+raw profiles from successful attempts, keeps existing profiles, and continues
+after a failed workload. The report records each attempt and totals for successful
+attempts, failures, and published profiles. Any failed attempt makes the command
+exit unsuccessfully. Use `--profiles-dir` to select a profile destination.
+
+The CLI integration tests use Python 3's standard library and run with `cargo test`.
+Set `PYTHON` if the interpreter is not available under the usual command name.
+
 ### Analyzing PGO profiles
 You can analyze gathered PGO profiles using the `llvm-profdata` binary:
 ```console

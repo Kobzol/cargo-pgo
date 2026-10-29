@@ -8,6 +8,7 @@ use cargo_pgo::clean::clean_artifacts;
 use cargo_pgo::get_cargo_ctx;
 use cargo_pgo::pgo::instrument::{PgoInstrumentArgs, PgoInstrumentShortcutArgs, pgo_instrument};
 use cargo_pgo::pgo::optimize::{PgoOptimizeArgs, pgo_optimize};
+use cargo_pgo::pgo::train::{PgoTrainArgs, pgo_train};
 use clap::Parser;
 use env_logger::Env;
 
@@ -44,6 +45,8 @@ enum Subcommand {
     Bench(PgoInstrumentShortcutArgs),
     /// Build an optimized version of a binary using generated PGO profiles.
     Optimize(PgoOptimizeArgs),
+    /// Build an instrumented executable and run a local workload plan.
+    Train(PgoTrainArgs),
     /// Optimization using BOLT.
     #[clap(subcommand)]
     Bolt(BoltArgs),
@@ -96,6 +99,7 @@ impl Args {
                 | Subcommand::Test(args)
                 | Subcommand::Bench(args) => args.cargo_args(),
                 Subcommand::Optimize(args) => args.cargo_args(),
+                Subcommand::Train(..) => &[],
                 Subcommand::Bolt(args) => args.cargo_args(),
                 Subcommand::Clean(..) => &[],
             },
@@ -112,6 +116,7 @@ impl Args {
                 | Subcommand::Test(args)
                 | Subcommand::Bench(args) => args.profiles_dir().to_owned(),
                 Subcommand::Optimize(args) => args.profiles_dir().to_owned(),
+                Subcommand::Train(..) => None,
                 Subcommand::Clean(CleanArgs { profiles_dir, .. }) => profiles_dir.to_owned(),
                 Subcommand::Bolt(..) => None,
             },
@@ -132,6 +137,7 @@ impl Args {
                 | Subcommand::Test(..)
                 | Subcommand::Bench(..)
                 | Subcommand::Optimize(..) => None,
+                Subcommand::Train(..) => None,
             },
         }
     }
@@ -139,6 +145,10 @@ impl Args {
 
 fn run() -> anyhow::Result<()> {
     let args = Args::parse();
+
+    if let Args::Pgo(Subcommand::Train(args)) = args {
+        return pgo_train(args);
+    }
 
     let cargo_args = args.cargo_args();
     let profiles_dir = args.profiles_dir();
@@ -154,6 +164,7 @@ fn run() -> anyhow::Result<()> {
         Subcommand::Run(args) => pgo_instrument(ctx, args.into_full_args(CargoCommand::Run)),
         Subcommand::Bench(args) => pgo_instrument(ctx, args.into_full_args(CargoCommand::Bench)),
         Subcommand::Optimize(args) => pgo_optimize(ctx, args),
+        Subcommand::Train(..) => unreachable!(),
         Subcommand::Bolt(BoltArgs::Build(args)) => bolt_instrument(ctx, args),
         Subcommand::Bolt(BoltArgs::Optimize(args)) => bolt_optimize(ctx, args),
         Subcommand::Clean(..) => clean_artifacts(ctx),

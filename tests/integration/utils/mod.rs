@@ -31,12 +31,12 @@ impl CargoProject {
             command.arg(arg);
         }
         command.current_dir(&self.dir);
+        command.env_remove("CARGO_TARGET_DIR");
         command.stdin(Stdio::piped());
         command.stdout(Stdio::piped());
         command.stderr(Stdio::piped());
 
-        let path = std::env::var("PATH").unwrap_or_default();
-        let path = format!("{}:{}", cargo_pgo_target_dir().display(), path);
+        let path = test_path();
 
         command.env("PATH", path);
 
@@ -99,7 +99,7 @@ impl Drop for CargoProject {
     fn drop(&mut self) {
         if std::thread::panicking() {
             // Do not delete the directory if an error has occurred
-            let path = std::mem::replace(&mut self._tempdir, TempDir::new().unwrap()).into_path();
+            let path = std::mem::replace(&mut self._tempdir, TempDir::new().unwrap()).keep();
             eprintln!("Directory of failed test located at: {}", path.display());
         }
     }
@@ -116,6 +116,7 @@ pub struct Cmd {
 impl Cmd {
     pub fn run(self) -> anyhow::Result<Output> {
         let mut command = Command::new(&self.arguments[0]);
+        command.env_remove("CARGO_TARGET_DIR");
         for arg in &self.arguments[1..] {
             command.arg(arg);
         }
@@ -126,8 +127,7 @@ impl Cmd {
         command.stdout(Stdio::piped());
         command.stderr(Stdio::piped());
 
-        let path = std::env::var("PATH").unwrap_or_default();
-        let path = format!("{}:{}", cargo_pgo_target_dir().display(), path);
+        let path = test_path();
 
         command.env("PATH", path);
 
@@ -213,7 +213,7 @@ pub fn init_cargo_project() -> anyhow::Result<CargoProject> {
 
     let name = "foo";
     let status = Command::new("cargo")
-        .args(["new", "--bin", name])
+        .args(["new", "--vcs", "none", "--bin", name])
         .current_dir(dir.path())
         .status()?;
     assert!(status.success());
@@ -230,10 +230,18 @@ pub fn init_cargo_project() -> anyhow::Result<CargoProject> {
 }
 
 fn cargo_pgo_target_dir() -> PathBuf {
-    let mut target_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    target_dir.push("target");
-    target_dir.push("debug");
-    target_dir
+    PathBuf::from(env!("CARGO_BIN_EXE_cargo-pgo"))
+        .parent()
+        .unwrap()
+        .to_path_buf()
+}
+
+fn test_path() -> std::ffi::OsString {
+    let current = std::env::var_os("PATH").unwrap_or_default();
+    std::env::join_paths(
+        std::iter::once(cargo_pgo_target_dir()).chain(std::env::split_paths(&current)),
+    )
+    .unwrap()
 }
 
 pub fn run_command<S: AsRef<OsStr>>(path: S) -> anyhow::Result<()> {

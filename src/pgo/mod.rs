@@ -3,6 +3,7 @@ use colored::Colorize;
 pub(crate) mod env;
 pub mod instrument;
 pub mod optimize;
+pub mod train;
 
 pub fn llvm_profdata_install_hint() -> String {
     format!(
