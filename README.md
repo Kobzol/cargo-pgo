@@ -159,6 +159,21 @@ $ cargo pgo optimize bench
 $ cargo pgo optimize test
 ```
 
+### Cleaning custom profile directories
+
+`--profiles-dir` and the clean command’s `--bolt-profiles-dir` can point to directories that also
+contain other files. `cargo pgo clean` and a new instrumentation build remove
+only recognized profiles for the selected kind, leaving unrelated files and
+directories in place. Symlink entries are not followed. The custom directory
+itself and its ancestors must be real directories rather than symlinks.
+
+Before instrumentation, existing profiles are moved into a temporary backup
+inside the selected directory. A successful command discards the backup; a
+failed command restores it. If the command produced a profile with the same
+name, both versions are retained. An interrupted reset is recovered on the next
+command that uses that profile directory. Do not edit the temporary
+`.cargo-pgo-*-reset-*` directories while a command is running.
+
 ### Analyzing PGO profiles
 You can analyze gathered PGO profiles using the `llvm-profdata` binary:
 ```console

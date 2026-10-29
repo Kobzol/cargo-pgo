@@ -1,10 +1,10 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::build::{
     CargoCommand, cargo_command_with_rustflags, get_artifact_kind, handle_metadata_message,
 };
-use crate::clear_directory;
 use crate::cli::cli_format_path;
+use crate::utils::file::validate_profile_output;
 use crate::workspace::CargoContext;
 use cargo_metadata::Message;
 use colored::Colorize;
@@ -83,60 +83,76 @@ impl PgoInstrumentShortcutArgs {
 pub fn pgo_instrument(ctx: CargoContext, args: PgoInstrumentArgs) -> anyhow::Result<()> {
     let pgo_dir = ctx.get_pgo_directory()?;
 
-    if !args.keep_profiles {
-        log::info!("PGO profile directory will be cleared.");
-        clear_directory(&pgo_dir)?;
-    }
-
-    log::info!(
-        "PGO profiles will be stored into {}.",
-        cli_format_path(pgo_dir.display())
-    );
-
-    let flags = vec![format!("-Cprofile-generate={}", pgo_dir.display())];
-    let mut cargo = cargo_command_with_rustflags(args.command, flags, args.cargo_args)?;
-
-    for message in cargo.messages() {
-        let message = message?;
-        match message {
-            Message::CompilerArtifact(artifact) => {
-                if let Some(ref executable) = artifact.executable {
-                    if let CargoCommand::Build = args.command {
-                        log::info!(
-                            "PGO-instrumented {} {} built successfully.",
-                            get_artifact_kind(&artifact).yellow(),
-                            artifact.target.name.blue()
-                        );
-                        log::info!(
-                            "Now run {} on your workload.\nIf your program creates multiple processes \
-or you will execute it multiple times in parallel, consider running it \
-with the following environment variable to have more precise profiles:\n{}",
-                            cli_format_path(executable),
-                            format!(
-                                "LLVM_PROFILE_FILE={}/{}_%m_%p.profraw",
-                                pgo_dir.display(),
-                                artifact.target.name
-                            )
-                            .blue()
-                        );
-                    }
-                }
-            }
-            Message::BuildFinished(res) => {
-                if res.success {
-                    log::info!(
-                        "PGO instrumentation build finished {}.",
-                        "successfully".green()
-                    );
-                } else {
-                    log::error!("PGO instrumentation build has {}.", "failed".red());
-                }
-            }
-            _ => handle_metadata_message(message),
+    if matches!(args.command, CargoCommand::Run) {
+        let output = std::env::var_os("LLVM_PROFILE_FILE");
+        if output.as_ref().is_some_and(|path| !path.is_empty()) {
+            validate_profile_output(&pgo_dir, output.as_deref().map(Path::new))?;
         }
     }
 
-    cargo.check_status()?;
+    let reset = if !args.keep_profiles {
+        log::info!("PGO profile directory will be cleared.");
+        ctx.reset_pgo_directory(&pgo_dir)?
+    } else {
+        None
+    };
 
-    Ok(())
+    let result = (|| {
+        log::info!(
+            "PGO profiles will be stored into {}.",
+            cli_format_path(pgo_dir.display())
+        );
+
+        let flags = vec![format!("-Cprofile-generate={}", pgo_dir.display())];
+        let mut cargo = cargo_command_with_rustflags(args.command, flags, args.cargo_args)?;
+
+        for message in cargo.messages() {
+            let message = message?;
+            match message {
+                Message::CompilerArtifact(artifact) => {
+                    if let Some(ref executable) = artifact.executable {
+                        if let CargoCommand::Build = args.command {
+                            log::info!(
+                                "PGO-instrumented {} {} built successfully.",
+                                get_artifact_kind(&artifact).yellow(),
+                                artifact.target.name.blue()
+                            );
+                            log::info!(
+                                "Now run {} on your workload.\nIf your program creates multiple processes \
+or you will execute it multiple times in parallel, consider running it \
+with the following environment variable to have more precise profiles:\n{}",
+                                cli_format_path(executable),
+                                format!(
+                                    "LLVM_PROFILE_FILE={}/{}_%m_%p.profraw",
+                                    pgo_dir.display(),
+                                    artifact.target.name
+                                )
+                                .blue()
+                            );
+                        }
+                    }
+                }
+                Message::BuildFinished(res) => {
+                    if res.success {
+                        log::info!(
+                            "PGO instrumentation build finished {}.",
+                            "successfully".green()
+                        );
+                    } else {
+                        log::error!("PGO instrumentation build has {}.", "failed".red());
+                    }
+                }
+                _ => handle_metadata_message(message),
+            }
+        }
+
+        cargo.check_status()?;
+
+        Ok(())
+    })();
+
+    match reset {
+        Some(reset) => reset.finish(result),
+        None => result,
+    }
 }

@@ -155,6 +155,24 @@ impl Cmd {
         self
     }
 
+    pub fn prepend_path(mut self, path: &Path) -> Self {
+        let current = self.env.remove("PATH").unwrap_or_else(|| {
+            std::env::var_os("PATH")
+                .unwrap_or_default()
+                .to_string_lossy()
+                .into_owned()
+        });
+        let joined = std::env::join_paths(
+            std::iter::once(path.to_path_buf())
+                .chain(std::iter::once(cargo_pgo_target_dir()))
+                .chain(std::env::split_paths(&current)),
+        )
+        .expect("Cannot construct PATH");
+        self.env
+            .insert("PATH".to_string(), joined.to_string_lossy().into_owned());
+        self
+    }
+
     pub fn cwd(self, cwd: &Path) -> Self {
         Self {
             cwd: Some(cwd.to_path_buf()),

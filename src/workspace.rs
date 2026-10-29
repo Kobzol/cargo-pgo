@@ -1,5 +1,9 @@
 use crate::build::parse_cargo_args;
-use crate::ensure_directory;
+use crate::utils::file::{
+    CustomProfileReset, ProfileKind, begin_custom_profile_cleanup, begin_custom_profile_reset,
+    recover_custom_profile_directory, recover_default_profile_directory,
+};
+use crate::{clear_directory, ensure_directory};
 use std::path::{Path, PathBuf};
 
 pub struct CargoContext {
@@ -11,18 +15,96 @@ pub struct CargoContext {
 impl CargoContext {
     pub fn get_pgo_directory(&self) -> anyhow::Result<PathBuf> {
         if let Some(profiles_dir) = &self.pgo_profiles_dir {
+            recover_custom_profile_directory(profiles_dir, ProfileKind::Pgo)?;
             Ok(profiles_dir.clone())
         } else {
-            self.get_target_directory(Path::new("pgo-profiles"))
+            let directory = self.get_target_directory(Path::new("pgo-profiles"))?;
+            recover_default_profile_directory(&directory, ProfileKind::Pgo)?;
+            Ok(directory)
         }
     }
 
     pub fn get_bolt_directory(&self) -> anyhow::Result<PathBuf> {
         if let Some(profiles_dir) = &self.bolt_profiles_dir {
+            recover_custom_profile_directory(profiles_dir, ProfileKind::Bolt)?;
             Ok(profiles_dir.clone())
         } else {
-            self.get_target_directory(Path::new("bolt-profiles"))
+            let directory = self.get_target_directory(Path::new("bolt-profiles"))?;
+            recover_default_profile_directory(&directory, ProfileKind::Bolt)?;
+            Ok(directory)
         }
+    }
+
+    pub(crate) fn reset_pgo_directory(
+        &self,
+        directory: &Path,
+    ) -> std::io::Result<Option<CustomProfileReset>> {
+        self.reset_profile_directory(directory, self.pgo_profiles_dir.is_some(), ProfileKind::Pgo)
+    }
+
+    pub(crate) fn reset_bolt_directory(
+        &self,
+        directory: &Path,
+    ) -> std::io::Result<Option<CustomProfileReset>> {
+        self.reset_profile_directory(
+            directory,
+            self.bolt_profiles_dir.is_some(),
+            ProfileKind::Bolt,
+        )
+    }
+
+    pub(crate) fn clean_pgo_directory(
+        &self,
+        directory: &Path,
+    ) -> std::io::Result<Option<CustomProfileReset>> {
+        self.clean_profile_directory(directory, self.pgo_profiles_dir.is_some(), ProfileKind::Pgo)
+    }
+
+    pub(crate) fn clean_bolt_directory(
+        &self,
+        directory: &Path,
+    ) -> std::io::Result<Option<CustomProfileReset>> {
+        self.clean_profile_directory(
+            directory,
+            self.bolt_profiles_dir.is_some(),
+            ProfileKind::Bolt,
+        )
+    }
+
+    fn reset_profile_directory(
+        &self,
+        directory: &Path,
+        custom: bool,
+        kind: ProfileKind,
+    ) -> std::io::Result<Option<CustomProfileReset>> {
+        if custom {
+            begin_custom_profile_reset(directory, kind).map(Some)
+        } else {
+            clear_directory(directory)?;
+            Ok(None)
+        }
+    }
+
+    fn clean_profile_directory(
+        &self,
+        directory: &Path,
+        custom: bool,
+        kind: ProfileKind,
+    ) -> std::io::Result<Option<CustomProfileReset>> {
+        if custom {
+            begin_custom_profile_cleanup(directory, kind)
+        } else {
+            std::fs::remove_dir_all(directory)?;
+            Ok(None)
+        }
+    }
+
+    pub(crate) fn pgo_profiles_are_custom(&self) -> bool {
+        self.pgo_profiles_dir.is_some()
+    }
+
+    pub(crate) fn bolt_profiles_are_custom(&self) -> bool {
+        self.bolt_profiles_dir.is_some()
     }
 
     fn get_target_directory(&self, path: &Path) -> anyhow::Result<PathBuf> {
